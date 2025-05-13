@@ -1,18 +1,22 @@
-<mat-card class="kyc-card">
+<mat-card class="kyc-card" (submit)="$event.preventDefault()">
   <div class="card-header">
     <div class="header-content">
       <div class="header-icon">
-        <mat-icon>person</mat-icon>
+        <mat-icon>badge</mat-icon>
       </div>
       <div class="header-text">
         <h2>Personal Information</h2>
-        <p>Please provide your personal details for verification</p>
+        <p>Please provide your basic information</p>
       </div>
     </div>
     <div class="completion-indicator">
       <div class="progress-circle">
         <span>33%</span>
-        <small>Profile Completion</small>
+        <small>Complete</small>
+      </div>
+      <div class="completion-text">
+        <strong>Step 1 of 3</strong>
+        <span>Personal Details</span>
       </div>
     </div>
   </div>
@@ -68,19 +72,28 @@
 
       <div class="form-field">
         <label>Phone Number</label>
-        <mat-form-field appearance="outline">
-          <mat-select placeholder="Country Code" formControlName="countryCode">
-            <mat-option value="+1">+1 (USA/Canada)</mat-option>
-            <mat-option value="+44">+44 (UK)</mat-option>
-            <mat-option value="+91">+91 (India)</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <input matInput placeholder="Phone number" formControlName="phoneNumber" type="tel">
-          <mat-error *ngIf="personalForm.get('phoneNumber')?.hasError('required')">
-            Phone number is required
-          </mat-error>
-        </mat-form-field>
+        <ngx-intl-tel-input
+          [cssClass]="'custom'"
+          [preferredCountries]="preferredCountries"
+          [enableAutoCountrySelect]="true"
+          [enablePlaceholder]="true"
+          [searchCountryFlag]="true"
+          [searchCountryField]="[SearchCountryField.Iso2, SearchCountryField.Name]"
+          [selectFirstCountry]="false"
+          [selectedCountryISO]="CountryISO.UnitedStates"
+          [maxLength]="15"
+          [phoneValidation]="true"
+          [separateDialCode]="true"
+          [numberFormat]="PhoneNumberFormat.National"
+          formControlName="phoneNumber"
+        >
+        </ngx-intl-tel-input>
+        <mat-error *ngIf="personalForm.get('phoneNumber')?.errors?.['required']">
+          Phone number is required
+        </mat-error>
+        <mat-error *ngIf="personalForm.get('phoneNumber')?.errors?.['validatePhoneNumber']">
+          Invalid phone number
+        </mat-error>
       </div>
 
       <div class="form-field">
@@ -100,7 +113,7 @@
       </div>
 
       <div class="form-field">
-        <label>Date of Birth</label>
+        <mat-label>Date of Birth</mat-label>
         <mat-form-field appearance="outline">
           <input matInput [matDatepicker]="picker" placeholder="Choose a date" formControlName="dateOfBirth">
           <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
@@ -111,12 +124,16 @@
         </mat-form-field>
       </div>
 
-      <div class="form-field">
-        <label>County</label>
+      <div class="county-field">
         <mat-form-field appearance="outline">
-          <input matInput placeholder="Enter your county" formControlName="county">
+          <mat-label>County</mat-label>
+          <mat-select formControlName="county" [panelClass]="'county-select-panel'">
+            <mat-option *ngFor="let county of counties" [value]="county">
+              {{county}}
+            </mat-option>
+          </mat-select>
           <mat-error *ngIf="personalForm.get('county')?.hasError('required')">
-            County is required
+            Please select your county
           </mat-error>
         </mat-form-field>
       </div>
@@ -128,23 +145,32 @@
             <mat-icon>add_a_photo</mat-icon>
             Take Selfie
           </button>
-          <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
+          <input #fileInput type="file"  formControlName="selfie"   (change)="onFileSelected($event)" accept="image/*" hidden>
         </div>
         <div class="preview-container" *ngIf="selfiePreview">
           <img [src]="selfiePreview" alt="Selfie preview" class="preview-image">
         </div>
       </div>
     </div>
-
-    <div class="action-buttons">
-      <button mat-button color="primary" type="button" disabled>
-        <mat-icon>arrow_back</mat-icon>
-        BACK
-      </button>
-      <button mat-flat-button color="primary" type="submit" (click)="onNext()" [disabled]="!personalForm.valid">
-        NEXT
-        <mat-icon>arrow_forward</mat-icon>
-      </button>
-    </div>
   </mat-card-content>
+
+  <mat-card-actions class="action-buttons">
+    <button mat-stroked-button 
+            class="nav-button back-button" 
+            type="button" 
+            disabled>
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+    
+    <button mat-flat-button
+            color="primary"
+            class="nav-button next-button"
+            type="button"
+            [disabled]="!personalForm.valid"
+            (click)="onNext()">
+      Next
+      <mat-icon>arrow_forward</mat-icon>
+    </button>
+  </mat-card-actions>
 </mat-card>

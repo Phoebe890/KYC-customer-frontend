@@ -4,6 +4,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http';
 
 // Material Imports
 import { MatCardModule } from '@angular/material/card';
@@ -40,10 +41,11 @@ import { routes } from './app.routes';
     MatOptionModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    HttpClientModule,
     // Feature Modules
     KycModule
   ],
   providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule { } 
+export class AppModule { }

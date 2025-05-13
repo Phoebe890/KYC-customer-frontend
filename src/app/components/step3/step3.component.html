@@ -54,31 +54,27 @@
     </div>
   </div>
 
-  <mat-card-content [formGroup]="emailForm">
-    <div class="form-grid">
-      <div class="form-field full-width">
-        <label>Email Address</label>
-        <mat-form-field appearance="outline">
-          <input matInput type="email" placeholder="Enter your email address" formControlName="email">
-          <mat-error *ngIf="emailForm.get('email')?.hasError('required')">
-            Email is required
-          </mat-error>
-          <mat-error *ngIf="emailForm.get('email')?.hasError('email')">
-            Please enter a valid email address
-          </mat-error>
-        </mat-form-field>
-      </div>
-    </div>
+  <form [formGroup]="emailForm">
+    <mat-card-content>
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" type="email">
+        <mat-error *ngIf="emailForm.get('email')?.hasError('required')">
+          Email is required
+        </mat-error>
+        <mat-error *ngIf="emailForm.get('email')?.hasError('email')">
+          Please enter a valid email address
+        </mat-error>
+      </mat-form-field>
+    </mat-card-content>
 
-    <div class="action-buttons">
-      <button mat-button color="primary" type="button" (click)="onBack()">
-        <mat-icon>arrow_back</mat-icon>
-        BACK
+    <mat-card-actions>
+      <button mat-button (click)="onBack()">Back</button>
+      <button mat-raised-button color="primary" 
+              [disabled]="!emailForm.valid"
+              (click)="onFinish()">
+        Finish
       </button>
-      <button mat-flat-button color="primary" type="submit" (click)="onSubmit()" [disabled]="!emailForm.valid">
-        SUBMIT
-        <mat-icon>check</mat-icon>
-      </button>
-    </div>
-  </mat-card-content>
+    </mat-card-actions>
+  </form>
 </mat-card>
