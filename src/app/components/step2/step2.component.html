@@ -1,0 +1,101 @@
+<mat-card class="kyc-card">
+  <div class="card-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <mat-icon>badge</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2>ID Verification</h2>
+        <p>Please upload clear photos of your identification document</p>
+      </div>
+    </div>
+    <div class="completion-indicator">
+      <div class="progress-circle">
+        <span>66%</span>
+        <small>Profile Completion</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step Progress Indicator -->
+  <div class="custom-stepper">
+    <div class="stepper-steps">
+      <div class="step completed">
+        <div class="step-circle">
+          <mat-icon>check</mat-icon>
+        </div>
+        <div class="step-label">
+          <span class="step-title">Personal Info</span>
+          <span class="step-subtitle">Basic details</span>
+        </div>
+        <div class="step-connector"></div>
+      </div>
+
+      <div class="step active">
+        <div class="step-circle">
+          <span>2</span>
+        </div>
+        <div class="step-label">
+          <span class="step-title">ID Verification</span>
+          <span class="step-subtitle">Document upload</span>
+        </div>
+        <div class="step-connector"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-circle">
+          <span>3</span>
+        </div>
+        <div class="step-label">
+          <span class="step-title">Contact Info</span>
+          <span class="step-subtitle">Email verification</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <mat-card-content [formGroup]="idForm">
+    <div class="form-grid">
+      <!-- ID Front -->
+      <div class="form-field full-width">
+        <label>ID Card Front</label>
+        <div class="id-upload">
+          <button mat-stroked-button color="primary" type="button" (click)="frontInput.click()">
+            <mat-icon>upload</mat-icon>
+            Upload Front Side
+          </button>
+          <input #frontInput type="file" (change)="onFileSelected($event, 'front')" accept="image/*" hidden>
+        </div>
+        <div class="preview-container" *ngIf="previews['front']">
+          <img [src]="previews['front']" alt="ID front preview" class="preview-image">
+        </div>
+      </div>
+
+      <!-- ID Back -->
+      <div class="form-field full-width">
+        <label>ID Card Back</label>
+        <div class="id-upload">
+          <button mat-stroked-button color="primary" type="button" (click)="backInput.click()">
+            <mat-icon>upload</mat-icon>
+            Upload Back Side
+          </button>
+          <input #backInput type="file" (change)="onFileSelected($event, 'back')" accept="image/*" hidden>
+        </div>
+        <div class="preview-container" *ngIf="previews['back']">
+          <img [src]="previews['back']" alt="ID back preview" class="preview-image">
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button mat-button color="primary" type="button" (click)="onBack()">
+        <mat-icon>arrow_back</mat-icon>
+        BACK
+      </button>
+      <button mat-flat-button color="primary" type="submit" (click)="onNext()" [disabled]="!idForm.valid">
+        NEXT
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

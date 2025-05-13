@@ -1,0 +1,150 @@
+<mat-card class="kyc-card">
+  <div class="card-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <mat-icon>person</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2>Personal Information</h2>
+        <p>Please provide your personal details for verification</p>
+      </div>
+    </div>
+    <div class="completion-indicator">
+      <div class="progress-circle">
+        <span>33%</span>
+        <small>Profile Completion</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step Progress Indicator -->
+  <div class="custom-stepper">
+    <div class="stepper-steps">
+      <div class="step active">
+        <div class="step-circle">
+          <span>1</span>
+        </div>
+        <div class="step-label">
+          <span class="step-title">Personal Info</span>
+          <span class="step-subtitle">Basic details</span>
+        </div>
+        <div class="step-connector"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-circle">
+          <span>2</span>
+        </div>
+        <div class="step-label">
+          <span class="step-title">ID Verification</span>
+          <span class="step-subtitle">Document upload</span>
+        </div>
+        <div class="step-connector"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-circle">
+          <span>3</span>
+        </div>
+        <div class="step-label">
+          <span class="step-title">Contact Info</span>
+          <span class="step-subtitle">Email verification</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <mat-card-content [formGroup]="personalForm">
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Full Name</label>
+        <mat-form-field appearance="outline">
+          <input matInput placeholder="Enter your full name" formControlName="fullName">
+          <mat-error *ngIf="personalForm.get('fullName')?.hasError('required')">
+            Full name is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-field">
+        <label>Phone Number</label>
+        <mat-form-field appearance="outline">
+          <mat-select placeholder="Country Code" formControlName="countryCode">
+            <mat-option value="+1">+1 (USA/Canada)</mat-option>
+            <mat-option value="+44">+44 (UK)</mat-option>
+            <mat-option value="+91">+91 (India)</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <input matInput placeholder="Phone number" formControlName="phoneNumber" type="tel">
+          <mat-error *ngIf="personalForm.get('phoneNumber')?.hasError('required')">
+            Phone number is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-field">
+        <label>Employment Status</label>
+        <mat-form-field appearance="outline">
+          <mat-select placeholder="Select status" formControlName="employmentStatus">
+            <mat-option value="employed">Employed</mat-option>
+            <mat-option value="self-employed">Self-Employed</mat-option>
+            <mat-option value="unemployed">Unemployed</mat-option>
+            <mat-option value="student">Student</mat-option>
+            <mat-option value="retired">Retired</mat-option>
+          </mat-select>
+          <mat-error *ngIf="personalForm.get('employmentStatus')?.hasError('required')">
+            Employment status is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-field">
+        <label>Date of Birth</label>
+        <mat-form-field appearance="outline">
+          <input matInput [matDatepicker]="picker" placeholder="Choose a date" formControlName="dateOfBirth">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="personalForm.get('dateOfBirth')?.hasError('required')">
+            Date of birth is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-field">
+        <label>County</label>
+        <mat-form-field appearance="outline">
+          <input matInput placeholder="Enter your county" formControlName="county">
+          <mat-error *ngIf="personalForm.get('county')?.hasError('required')">
+            County is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-field full-width">
+        <label>Selfie Photo</label>
+        <div class="selfie-upload">
+          <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()">
+            <mat-icon>add_a_photo</mat-icon>
+            Take Selfie
+          </button>
+          <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
+        </div>
+        <div class="preview-container" *ngIf="selfiePreview">
+          <img [src]="selfiePreview" alt="Selfie preview" class="preview-image">
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button mat-button color="primary" type="button" disabled>
+        <mat-icon>arrow_back</mat-icon>
+        BACK
+      </button>
+      <button mat-flat-button color="primary" type="submit" (click)="onNext()" [disabled]="!personalForm.valid">
+        NEXT
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
