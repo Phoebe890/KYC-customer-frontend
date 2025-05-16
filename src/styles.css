@@ -53,3 +53,36 @@ ngx-intl-tel-input.custom .country-dropdown:focus,
 ngx-intl-tel-input.custom .country-dropdown:hover {
   border-color: #3f51b5;
 }
+
+/* Phone number dropdown styles */
+.iti__country-list {
+  position: fixed !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  width: auto !important;
+  min-width: 300px !important;
+  margin-top: 2px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+  background-color: white !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  z-index: 9999 !important;
+}
+
+/* Container positioning */
+.iti--container {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Dropdown arrow positioning */
+.iti__arrow {
+  margin-top: 0 !important;
+}
+
+/* Ensure dropdown appears above other elements */
+.iti__country-list.iti__country-list--dropdown {
+  top: auto !important;
+  bottom: auto !important;
+}

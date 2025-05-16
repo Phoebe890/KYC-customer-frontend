@@ -12,13 +12,11 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { RouterModule } from '@angular/router';
 
-import { Step1Component } from './components/step1/step1.component';
 import { Step2Component } from './components/step2/step2.component';
 import { Step3Component } from './components/step3/step3.component';
 
 @NgModule({
   declarations: [
-    Step1Component,
     Step2Component,
     Step3Component
   ],
@@ -37,7 +35,6 @@ import { Step3Component } from './components/step3/step3.component';
     RouterModule
   ],
   exports: [
-    Step1Component,
     Step2Component,
     Step3Component
   ]

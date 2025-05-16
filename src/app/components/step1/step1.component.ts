@@ -1,20 +1,20 @@
 import { Component, OnInit } from '@angular/core';
+import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { CountyService } from '../../services/county.service';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { HttpClientModule } from '@angular/common/http'; 
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { NgxIntlTelInputModule } from 'ngx-intl-tel-input';
 import { CountryISO, PhoneNumberFormat, SearchCountryField } from 'ngx-intl-tel-input';
-import { CountyService } from '../../services/county.service';
 
 @Component({
   selector: 'app-step1',
@@ -24,75 +24,116 @@ import { CountyService } from '../../services/county.service';
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
-    MatDatepickerModule,  
-    MatNativeDateModule, 
     MatInputModule,
-    MatButtonModule,
-    HttpClientModule, 
-    MatIconModule,  
     MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatIconModule,
+    MatButtonModule,
     NgxIntlTelInputModule
   ],
   templateUrl: './step1.component.html',
-  styleUrls: ['./step1.component.css']
+  styleUrls: [
+    '../../shared/styles/kyc-form.scss',
+    './step1.component.css'
+  ]
 })
 export class Step1Component implements OnInit {
-  personalForm!: FormGroup;
-  selfiePreview: string | null = null;
-  SearchCountryField = SearchCountryField;
-  CountryISO = CountryISO;
-  PhoneNumberFormat = PhoneNumberFormat;
-  preferredCountries: CountryISO[] = [CountryISO.UnitedStates, CountryISO.UnitedKingdom];
+  personalInfoForm!: FormGroup;
   counties: string[] = [];
+  CountryISO = CountryISO;
+  SearchCountryField = SearchCountryField;
+  PhoneNumberFormat = PhoneNumberFormat;
+  preferredCountries: CountryISO[] = [
+    CountryISO.Kenya,
+    CountryISO.Uganda,
+    CountryISO.Tanzania,
+    CountryISO.Ethiopia,
+    CountryISO.Rwanda
+  ];
+  maxDate = new Date(); // Sets max date to today
+  startDate = new Date(1990, 0, 1); // Sets default view to 1990
 
   constructor(
     private formBuilder: FormBuilder,
     private router: Router,
-    private http: HttpClient,
-    private countyService: CountyService
+    private countyService: CountyService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
-    this.personalForm = this.formBuilder.group({
-      fullName: ['', Validators.required],
-      phoneNumber: ['null', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      
-      employmentStatus: ['', Validators.required],
-      dateOfBirth: ['', Validators.required],
-      county: ['', Validators.required],
-      selfie: ['null', Validators.required]
-    });
+    this.initForm();
+    this.loadCounties();
+     //localStorage.removeItem('step1Data');
+  }
 
+  initForm() {
+    this.personalInfoForm = this.formBuilder.group({
+      fullName: ['', [Validators.required, Validators.minLength(2)]],
+      phoneNumber: ['', Validators.required],
+      employmentStatus: ['', Validators.required],
+      dateOfBirth: ['', [Validators.required, this.ageValidator]],
+      county: ['', Validators.required]
+    });
+  }
+
+  loadSavedData() {
+    const savedData = localStorage.getItem('step1Data');
+    if (savedData) {
+      this.personalInfoForm.patchValue(JSON.parse(savedData));
+    }
+  }
+
+  ageValidator(control: FormControl) {
+    if (!control.value) {
+      return null;
+    }
+    const today = new Date();
+    const birthDate = new Date(control.value);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    if (age < 18) {
+      return { underage: true };
+    }
+
+    return null;
+  }
+
+  loadCounties() {
     this.countyService.getCounties().subscribe({
       next: (counties) => {
         this.counties = counties;
       },
       error: (error) => {
         console.error('Error loading counties:', error);
+        this.snackBar.open('Error loading counties', 'Close', { duration: 3000 });
       }
     });
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.selfiePreview = e.target.result;
-        this.personalForm.patchValue({
-          selfie: file
+  onNext() {
+    if (this.personalInfoForm.valid) {
+      // Save form data
+      localStorage.setItem('step1Data', JSON.stringify(this.personalInfoForm.value));
+      
+      // Navigate to next step
+      this.router.navigate(['/step2']).then(() => {
+        // Show success message
+        this.snackBar.open('Personal information saved successfully', 'Close', {
+          duration: 3000
         });
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  onNext(): void {
-    if (this.personalForm.valid) {
-      this.router.navigate(['/step2']);
+      });
     } else {
-      // Mark all fields as touched to show validation errors
-      Object.values(this.personalForm.controls).forEach(control => control.markAsTouched());
+      // Show error message if form is invalid
+      this.snackBar.open('Please fill in all required fields correctly', 'Close', {
+        duration: 3000
+      });
     }
   }
 }
+

@@ -42,10 +42,10 @@ describe('Step1Component', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize the personalForm', () => {
-    expect(component.personalForm).toBeDefined();
-    expect(component.personalForm instanceof FormGroup).toBeTrue();
-    expect(Object.keys(component.personalForm.controls).length).toBe(5);
+  it('should initialize the personalInfoForm', () => {
+    expect(component.personalInfoForm).toBeDefined();
+    expect(component.personalInfoForm instanceof FormGroup).toBeTrue();
+    expect(Object.keys(component.personalInfoForm.controls).length).toBe(5);
   });
 
   // Add more tests for form validity, input interactions, etc. if needed.

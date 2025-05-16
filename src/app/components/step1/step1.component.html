@@ -1,160 +1,130 @@
-<mat-card class="kyc-card" (submit)="$event.preventDefault()">
-  <div class="card-header">
-    <div class="header-content">
-      <div class="header-icon">
-        <mat-icon>badge</mat-icon>
-      </div>
-      <div class="header-text">
-        <h2>Personal Information</h2>
-        <p>Please provide your basic information</p>
-      </div>
+<mat-card class="kyc-card">
+  <div class="header-content">
+    <div class="header-icon">
+      <mat-icon>person</mat-icon>
     </div>
-    <div class="completion-indicator">
+    <div class="header-text">
+      <h2>Personal Information</h2>
+      <p>Please provide your basic information</p>
+    </div>
+    <!-- Circular Progress Indicator -->
+    <div class="step-indicator">
       <div class="progress-circle">
-        <span>33%</span>
-        <small>Complete</small>
+        <svg width="40" height="40">
+          <circle class="progress-ring-bg" cx="20" cy="20" r="18"/>
+          <circle class="progress-ring-circle" 
+                  cx="20" 
+                  cy="20" 
+                  r="18"
+                  stroke-dasharray="113.097"
+                  stroke-dashoffset="75.73"/>
+        </svg>
+        <span class="percentage">33%</span>
       </div>
-      <div class="completion-text">
-        <strong>Step 1 of 3</strong>
-        <span>Personal Details</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Step Progress Indicator -->
-  <div class="custom-stepper">
-    <div class="stepper-steps">
-      <div class="step active">
-        <div class="step-circle">
-          <span>1</span>
-        </div>
-        <div class="step-label">
-          <span class="step-title">Personal Info</span>
-          <span class="step-subtitle">Basic details</span>
-        </div>
-        <div class="step-connector"></div>
-      </div>
-
-      <div class="step">
-        <div class="step-circle">
-          <span>2</span>
-        </div>
-        <div class="step-label">
-          <span class="step-title">ID Verification</span>
-          <span class="step-subtitle">Document upload</span>
-        </div>
-        <div class="step-connector"></div>
-      </div>
-
-      <div class="step">
-        <div class="step-circle">
-          <span>3</span>
-        </div>
-        <div class="step-label">
-          <span class="step-title">Contact Info</span>
-          <span class="step-subtitle">Email verification</span>
-        </div>
+      <div class="step-text">
+        <span class="current-step">Step 1 of 3</span>
+        <span class="step-label">Personal Details</span>
       </div>
     </div>
   </div>
 
-  <mat-card-content [formGroup]="personalForm">
-    <div class="form-grid">
-      <div class="form-field">
-        <label>Full Name</label>
-        <mat-form-field appearance="outline">
-          <input matInput placeholder="Enter your full name" formControlName="fullName">
-          <mat-error *ngIf="personalForm.get('fullName')?.hasError('required')">
-            Full name is required
-          </mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="form-field">
-        <label>Phone Number</label>
-        <ngx-intl-tel-input
-          [cssClass]="'custom'"
-          [preferredCountries]="preferredCountries"
-          [enableAutoCountrySelect]="true"
-          [enablePlaceholder]="true"
-          [searchCountryFlag]="true"
-          [searchCountryField]="[SearchCountryField.Iso2, SearchCountryField.Name]"
-          [selectFirstCountry]="false"
-          [selectedCountryISO]="CountryISO.UnitedStates"
-          [maxLength]="15"
-          [phoneValidation]="true"
-          [separateDialCode]="true"
-          [numberFormat]="PhoneNumberFormat.National"
-          formControlName="phoneNumber"
-        >
-        </ngx-intl-tel-input>
-        <mat-error *ngIf="personalForm.get('phoneNumber')?.errors?.['required']">
-          Phone number is required
-        </mat-error>
-        <mat-error *ngIf="personalForm.get('phoneNumber')?.errors?.['validatePhoneNumber']">
-          Invalid phone number
-        </mat-error>
-      </div>
-
-      <div class="form-field">
-        <label>Employment Status</label>
-        <mat-form-field appearance="outline">
-          <mat-select placeholder="Select status" formControlName="employmentStatus">
-            <mat-option value="employed">Employed</mat-option>
-            <mat-option value="self-employed">Self-Employed</mat-option>
-            <mat-option value="unemployed">Unemployed</mat-option>
-            <mat-option value="student">Student</mat-option>
-            <mat-option value="retired">Retired</mat-option>
-          </mat-select>
-          <mat-error *ngIf="personalForm.get('employmentStatus')?.hasError('required')">
-            Employment status is required
-          </mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="form-field">
-        <mat-label>Date of Birth</mat-label>
-        <mat-form-field appearance="outline">
-          <input matInput [matDatepicker]="picker" placeholder="Choose a date" formControlName="dateOfBirth">
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-          <mat-error *ngIf="personalForm.get('dateOfBirth')?.hasError('required')">
-            Date of birth is required
-          </mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="county-field">
-        <mat-form-field appearance="outline">
-          <mat-label>County</mat-label>
-          <mat-select formControlName="county" [panelClass]="'county-select-panel'">
-            <mat-option *ngFor="let county of counties" [value]="county">
-              {{county}}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="personalForm.get('county')?.hasError('required')">
-            Please select your county
-          </mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="form-field full-width">
-        <label>Selfie Photo</label>
-        <div class="selfie-upload">
-          <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()">
-            <mat-icon>add_a_photo</mat-icon>
-            Take Selfie
-          </button>
-          <input #fileInput type="file"  formControlName="selfie"   (change)="onFileSelected($event)" accept="image/*" hidden>
-        </div>
-        <div class="preview-container" *ngIf="selfiePreview">
-          <img [src]="selfiePreview" alt="Selfie preview" class="preview-image">
-        </div>
+  <div class="progress-steps">
+    <div class="step active">
+      <div class="step-circle">1</div>
+      <div class="step-content">
+        <div class="step-title">Personal Info</div>
+        <div class="step-subtitle">Basic details</div>
       </div>
     </div>
+    <div class="step">
+      <div class="step-circle">2</div>
+      <div class="step-content">
+        <div class="step-title">ID Verification</div>
+        <div class="step-subtitle">Document upload</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-circle">3</div>
+      <div class="step-content">
+        <div class="step-title">Contact Info</div>
+        <div class="step-subtitle">Email verification</div>
+      </div>
+    </div>
+  </div>
+
+  <mat-card-content>
+    <form [formGroup]="personalInfoForm" class="kyc-form">
+      <div class="form-grid">
+        <!-- Full Name -->
+        <div class="form-field">
+          <div class="field-label">Full Name</div>
+          <input class="custom-input" 
+                 formControlName="fullName" 
+                 type="text"
+                 placeholder="Enter full name">
+        </div>
+
+        <!-- Phone Number -->
+        <div class="form-field">
+          <div class="field-label">Phone Number</div>
+          <div class="phone-input-container">
+            <ngx-intl-tel-input
+              [cssClass]="'custom'"
+              [preferredCountries]="preferredCountries"
+              [enableAutoCountrySelect]="true"
+              [enablePlaceholder]="true"
+              formControlName="phoneNumber">
+            </ngx-intl-tel-input>
+          </div>
+        </div>
+
+        <!-- Employment Status -->
+        <div class="form-field">
+          <div class="field-label">Employment Status</div>
+          <div class="select-container">
+            <select class="custom-input" formControlName="employmentStatus">
+              <option value="">Select status</option>
+              <option value="employed">Employed</option>
+              <option value="self-employed">Self Employed</option>
+              <option value="unemployed">Unemployed</option>
+            </select>
+            <span class="select-arrow">▼</span>
+          </div>
+        </div>
+
+        <!-- Date of Birth -->
+        <div class="form-field">
+          <div class="field-label">Date of Birth</div>
+          <mat-form-field appearance="outline">
+            <input matInput [matDatepicker]="picker" 
+                   formControlName="dateOfBirth" 
+                   placeholder="MM/DD/YYYY"
+                   [max]="maxDate">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker startView="multi-year" 
+                            [startAt]="startDate">
+            </mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <!-- County -->
+        <div class="form-field">
+          <div class="field-label">County</div>
+          <div class="select-container">
+            <select class="custom-input" formControlName="county">
+              <option value="">Select county</option>
+              <option *ngFor="let county of counties" [value]="county">
+                {{county}}
+              </option>
+            </select>
+            <span class="select-arrow">▼</span>
+          </div>
+        </div>
+      </div>
+    </form>
   </mat-card-content>
 
-  <mat-card-actions class="action-buttons">
+  <mat-card-actions>
     <button mat-stroked-button 
             class="nav-button back-button" 
             type="button" 
@@ -162,15 +132,17 @@
       <mat-icon>arrow_back</mat-icon>
       Back
     </button>
-    
-    <button mat-flat-button
+   
+    <button mat-flat-button 
             color="primary"
-            class="nav-button next-button"
+            class="nav-button next-button" 
             type="button"
-            [disabled]="!personalForm.valid"
-            (click)="onNext()">
-      Next
+            (click)="onNext()"
+            [disabled]="!personalInfoForm.valid">
+      <span>Save & Next</span>
       <mat-icon>arrow_forward</mat-icon>
     </button>
   </mat-card-actions>
 </mat-card>
+
+

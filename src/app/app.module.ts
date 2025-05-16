@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { NgxIntlTelInputModule } from 'ngx-intl-tel-input';
 
 // Material Imports
 import { MatCardModule } from '@angular/material/card';
@@ -20,6 +22,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { AppComponent } from './app.component';
 import { KycModule } from './kyc.module';
 import { routes } from './app.routes';
+import { CountyService } from './services/county.service';
 
 @NgModule({
   declarations: [
@@ -31,6 +34,7 @@ import { routes } from './app.routes';
     BrowserAnimationsModule,
     RouterModule.forRoot(routes),
     ReactiveFormsModule,
+    NgxIntlTelInputModule,
     // Material Modules
     MatCardModule,
     MatFormFieldModule,
@@ -42,10 +46,13 @@ import { routes } from './app.routes';
     MatDatepickerModule,
     MatNativeDateModule,
     HttpClientModule,
+    MatSnackBarModule,
     // Feature Modules
     KycModule
   ],
-  providers: [],
+  providers: [
+    CountyService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

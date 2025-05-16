@@ -21,15 +21,25 @@ import { Router } from '@angular/router';
     MatInputModule
   ],
   templateUrl: './step3.component.html',
-  styleUrls: ['./step3.component.css']
+  styleUrls: [
+    '../../shared/styles/kyc-form.scss',
+    './step3.component.css'
+  ]
 })
 export class Step3Component implements OnInit {
+  stepNumber: number = 3;
+  stepTitle: string = 'Step 3';
+  stepDescription: string = 'Email verification';
+  isCompleted: boolean = false;
   emailForm!: FormGroup;
+  currentStep: number = 3;
 
   constructor(
     private router: Router,
     private formBuilder: FormBuilder
-  ) {}
+  ) {
+    this.currentStep = 3;
+  }
 
   ngOnInit() {
     this.emailForm = this.formBuilder.group({
@@ -43,8 +53,25 @@ export class Step3Component implements OnInit {
 
   onFinish() {
     if (this.emailForm.valid) {
+      this.isCompleted = true;
       console.log('KYC process completed', this.emailForm.value);
       this.router.navigate(['/']);
     }
   }
+
+  onStepClick(step: number) {
+    switch (step) {
+      case 1:
+        this.router.navigate(['/step1']);
+        break;
+      case 2:
+        this.router.navigate(['/step2']);
+        break;
+      case 3:
+        // Already on step 3
+        break;
+    }
+  }
 }
+
+
