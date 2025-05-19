@@ -1,13 +1,3 @@
-.step.clickable {
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.step.clickable:hover .step-circle {
-  transform: scale(1.1);
-  box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.1);
-}
-
 /* Progress Indicator Styles */
 .step-indicator {
   display: flex;
@@ -75,6 +65,7 @@
   color: #1E293B;
 }
 
+/* Header Content */
 .header-content {
   display: flex;
   align-items: center;
@@ -82,6 +73,12 @@
   background: #ffffff;
   border-radius: 8px 8px 0 0;
   margin-bottom: 2rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .header-icon {
@@ -119,202 +116,121 @@
   font-size: 0.875rem;
 }
 
-/* Media Queries */
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .step-indicator {
-    width: 100%;
-    margin-left: 0;
-    justify-content: center;
-  }
-}
-
-.kyc-card {
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 2.5rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Progress Steps Styles */
-.progress-steps {
-  position: relative;
+/* Completion Indicator */
+.completion-indicator {
   display: flex;
-  justify-content: space-between;
-  margin: 2.5rem auto;
-  width: 100%;
-  max-width: 600px;
-  padding: 0 2rem;
-}
-
-.step {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
-  width: 33.33%;
+  margin-left: auto;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Only show connecting line for completed steps */
-.step.completed:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  left: 35px;
-  width: calc(100% - 35px);
-  top: 11px;
-  height: 2px;
-  background: #4CAF50;
-  z-index: 1;
-}
-
-.step-circle {
-  width: 24px;
-  height: 24px;
+.progress-circle {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: #e3f2fd;
   border-radius: 50%;
-  background: white;
-  border: 2px solid #E2E8F0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 500;
-  color: #64748B;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-  position: relative;
 }
 
-.step-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.progress-circle svg {
+  transform: rotate(-90deg);
+  position: absolute;
 }
 
-.step-title {
-  font-weight: 500;
-  font-size: 14px;
-  color: #1F2937;
+.progress-ring-bg {
+  fill: none;
+  stroke: #e0e0e0;
+  stroke-width: 3;
 }
 
-.step-subtitle {
-  font-size: 12px;
-  color: #64748B;
+.progress-ring-circle {
+  fill: none;
+  stroke: #1976d2;
+  stroke-width: 3;
+  transition: stroke-dashoffset 0.3s ease;
 }
 
-/* Completed State */
-.step.completed .step-circle {
-  background: #4CAF50;
-  border-color: #4CAF50;
-}
-
-.step.completed .step-circle::after {
-  content: "✓";
+.percentage {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
-  font-size: 14px;
-  line-height: 1;
-}
-
-/* Hide the number when step is completed */
-.step.completed .step-circle {
-  color: transparent;
-}
-
-/* Active State */
-.step.active .step-circle {
-  background: #1976d2;
-  border-color: #1976d2;
-  color: white;
-}
-
-.step.active .step-title {
+  font-size: 12px;
+  font-weight: 500;
   color: #1976d2;
 }
 
-/* Tablet Responsive */
-@media (max-width: 768px) {
-  .progress-steps {
-    padding: 0 1.5rem;
-  }
-
-  .step.completed:not(:last-child)::after {
-    width: calc(100% - 35px);
-  }
-}
-
-/* Mobile Responsive */
-@media (max-width: 480px) {
-  .progress-steps {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0 1rem;
-    gap: 2rem;
-  }
-
-  .step {
-    width: 100%;
-  }
-
-  .step.completed:not(:last-child)::after {
-    left: 11px;
-    width: 2px;
-    top: 24px;
-    height: calc(100% + 2rem);
-    right: auto;
-  }
-
-  .step-info {
-    margin-left: 0.5rem;
-  }
-}
-
-/* Form Styles */
-.form-section {
-  padding: 2rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin: 2rem 0;
+.step-text {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+}
+
+.current-step {
+  font-size: 12px;
+  color: #64748B;
+  margin-bottom: 2px;
+}
+
+.step-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1E293B;
+}
+
+/* Form Section */
+.form-section {
+  padding: 20px;
 }
 
 .form-header {
-  margin-bottom: 1.5rem;
-  text-align: left;
-  max-width: 400px;
+  margin-bottom: 20px;
 }
 
 .form-title {
-  font-size: 1.1rem;
+  margin: 0 0 8px;
+  font-size: 18px;
   font-weight: 500;
   color: #1E293B;
-  margin-bottom: 0.5rem;
 }
 
 .form-description {
-  color: #64748B;
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
-.email-field-container {
-  width: 100%;
-  max-width: 400px;
   margin: 0;
+  color: #64748B;
+  font-size: 14px;
 }
 
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 32px;
+  width: 100%;
+}
+
+.action-buttons button {
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.submit-button {
+  margin-left: auto;
+}
+
+.submit-button mat-icon {
+  margin-left: 4px;
+}
+
+/* Form Styles */
 mat-form-field {
   width: 100%;
 }
@@ -351,52 +267,48 @@ mat-form-field {
   padding: 0 16px !important;
 }
 
-/* Action Buttons */
-mat-card-actions {
-  display: flex;
-  justify-content: space-between;
-  padding: 1.5rem 0 0;
-  margin: 0;
-  border-top: 1px solid #E5E7EB;
+/* Card Layout */
+.kyc-card {
+  max-width: 700px;
+  margin: 1.5rem auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-button[mat-button] {
-  color: #64748B;
+/* Container */
+.kyc-container {
+  padding: 20px;
+  min-height: 100vh;
+  background: #f8fafc;
 }
 
-button[mat-raised-button] {
-  min-width: 120px;
-  height: 44px;
-  font-weight: 500;
-}
-
-/* Responsive adjustments */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .form-section {
-    padding: 1.5rem;
-  }
-
-  .email-field-container {
-    max-width: 360px;
-  }
-}
-
-@media (max-width: 480px) {
-  .form-section {
-    padding: 1rem;
-  }
-
-  .email-field-container {
-    max-width: 300px;
-  }
-
-  mat-card-actions {
-    flex-direction: column-reverse;
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 1rem;
   }
 
-  button[mat-button],
-  button[mat-raised-button] {
+  .completion-indicator {
     width: 100%;
+    margin-left: 0;
+    margin-top: 1rem;
+    justify-content: center;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .action-buttons button {
+    width: 100%;
+  }
+
+  .submit-button {
+    margin-left: 0;
+    order: -1;
   }
 }

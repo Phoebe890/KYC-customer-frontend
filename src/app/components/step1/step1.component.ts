@@ -15,6 +15,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { NgxIntlTelInputModule } from 'ngx-intl-tel-input';
 import { CountryISO, PhoneNumberFormat, SearchCountryField } from 'ngx-intl-tel-input';
+import { StepProgressComponent } from '../../shared/components/step-progress/step-progress.component';
+import { DateFilterFn } from '@angular/material/datepicker';
+import { Step1FormData, EmploymentStatus } from '../../models/step1.interface';
 
 @Component({
   selector: 'app-step1',
@@ -30,7 +33,8 @@ import { CountryISO, PhoneNumberFormat, SearchCountryField } from 'ngx-intl-tel-
     MatNativeDateModule,
     MatIconModule,
     MatButtonModule,
-    NgxIntlTelInputModule
+    NgxIntlTelInputModule,
+    StepProgressComponent
   ],
   templateUrl: './step1.component.html',
   styleUrls: [
@@ -39,7 +43,10 @@ import { CountryISO, PhoneNumberFormat, SearchCountryField } from 'ngx-intl-tel-
   ]
 })
 export class Step1Component implements OnInit {
-  personalInfoForm!: FormGroup;
+  personalInfoForm: FormGroup;
+  isLoadingCounties = false;
+  isSubmitting = false;
+  
   counties: string[] = [];
   CountryISO = CountryISO;
   SearchCountryField = SearchCountryField;
@@ -51,45 +58,90 @@ export class Step1Component implements OnInit {
     CountryISO.Ethiopia,
     CountryISO.Rwanda
   ];
-  maxDate = new Date(); // Sets max date to today
-  startDate = new Date(1990, 0, 1); // Sets default view to 1990
+  searchCountryField: SearchCountryField[] = [
+    SearchCountryField.Iso2,
+    SearchCountryField.Name,
+    SearchCountryField.DialCode
+  ];
+  
+  maxDate: Date = new Date();
+  startDate: Date = new Date(1990, 0, 1);
+
+  employmentOptions: { value: EmploymentStatus; label: string }[] = [
+    { value: 'employed', label: 'Employed' },
+    { value: 'self-employed', label: 'Self Employed' },
+    { value: 'unemployed', label: 'Unemployed' },
+    { value: 'student', label: 'Student' },
+    { value: 'retired', label: 'Retired' }
+  ];
 
   constructor(
     private formBuilder: FormBuilder,
     private router: Router,
     private countyService: CountyService,
     private snackBar: MatSnackBar
-  ) {}
-
-  ngOnInit() {
-    this.initForm();
-    this.loadCounties();
-     //localStorage.removeItem('step1Data');
-  }
-
-  initForm() {
+  ) {
     this.personalInfoForm = this.formBuilder.group({
-      fullName: ['', [Validators.required, Validators.minLength(2)]],
-      phoneNumber: ['', Validators.required],
-      employmentStatus: ['', Validators.required],
-      dateOfBirth: ['', [Validators.required, this.ageValidator]],
-      county: ['', Validators.required]
+      fullName: ['', [
+        Validators.required, 
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-Z\s'-]+$/)
+      ]],
+      phoneNumber: [null, [Validators.required]],
+      employmentStatus: [null as EmploymentStatus | null, [Validators.required]],
+      dateOfBirth: [null, [Validators.required, this.dateOfBirthValidator()]],
+      county: ['', [Validators.required]]
     });
   }
 
-  loadSavedData() {
-    const savedData = localStorage.getItem('step1Data');
-    if (savedData) {
-      this.personalInfoForm.patchValue(JSON.parse(savedData));
-    }
+  ngOnInit() {
+    this.loadCounties();
+    this.loadSavedData();
+    this.setupFormValidation();
   }
 
-  ageValidator(control: FormControl) {
-    if (!control.value) {
-      return null;
-    }
+  private setupFormValidation() {
+    // Monitor phone number changes for validation
+    this.personalInfoForm.get('phoneNumber')?.valueChanges.subscribe(value => {
+      if (value && typeof value === 'object' && 'valid' in value) {
+        if (value.valid) {
+          this.personalInfoForm.get('phoneNumber')?.setErrors(null);
+        } else {
+          this.personalInfoForm.get('phoneNumber')?.setErrors({ invalidNumber: true });
+        }
+      }
+    });
+
+    // Monitor date of birth changes for validation
+    this.personalInfoForm.get('dateOfBirth')?.valueChanges.subscribe(value => {
+      if (value) {
+        const errors = this.dateOfBirthValidator()(new FormControl(value));
+        this.personalInfoForm.get('dateOfBirth')?.setErrors(errors);
+      }
+    });
+  }
+
+  dateOfBirthValidator() {
+    return (control: FormControl): { [key: string]: any } | null => {
+      if (!control.value) return { required: true };
+      
+      const today = new Date();
+      const birthDate = new Date(control.value);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      return age >= 18 ? null : { underage: true };
+    };
+  }
+
+  ageValidator: DateFilterFn<Date | null> = (date: Date | null): boolean => {
+    if (!date) return false;
     const today = new Date();
-    const birthDate = new Date(control.value);
+    const birthDate = new Date(date);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
 
@@ -97,43 +149,84 @@ export class Step1Component implements OnInit {
       age--;
     }
 
-    if (age < 18) {
-      return { underage: true };
-    }
+    return age >= 18;
+  };
 
-    return null;
+  loadSavedData() {
+    const savedData = localStorage.getItem('step1Data');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        const data = {
+          ...parsedData,
+          employmentStatus: parsedData.employmentStatus as EmploymentStatus,
+          dateOfBirth: parsedData.dateOfBirth ? new Date(parsedData.dateOfBirth) : null
+        };
+        this.personalInfoForm.patchValue(data);
+      } catch (error) {
+        console.error('Error parsing saved data:', error);
+        this.snackBar.open('Error loading saved data', 'Close', { duration: 3000 });
+      }
+    }
   }
 
   loadCounties() {
+    this.isLoadingCounties = true;
     this.countyService.getCounties().subscribe({
       next: (counties) => {
         this.counties = counties;
+        this.isLoadingCounties = false;
       },
       error: (error) => {
         console.error('Error loading counties:', error);
-        this.snackBar.open('Error loading counties', 'Close', { duration: 3000 });
+        this.isLoadingCounties = false;
+        this.snackBar.open('Error loading counties. Please try again.', 'Close', { 
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
       }
     });
   }
 
   onNext() {
-    if (this.personalInfoForm.valid) {
-      // Save form data
-      localStorage.setItem('step1Data', JSON.stringify(this.personalInfoForm.value));
+    if (this.personalInfoForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
+      const formData = this.personalInfoForm.getRawValue();
       
-      // Navigate to next step
-      this.router.navigate(['/step2']).then(() => {
-        // Show success message
-        this.snackBar.open('Personal information saved successfully', 'Close', {
-          duration: 3000
+      try {
+        localStorage.setItem('step1Data', JSON.stringify(formData));
+        
+        this.router.navigate(['/step2']).then(() => {
+          this.isSubmitting = false;
+          this.snackBar.open('Personal information saved successfully', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
         });
-      });
+      } catch (error) {
+        console.error('Error saving form data:', error);
+        this.isSubmitting = false;
+        this.snackBar.open('Error saving data. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
     } else {
-      // Show error message if form is invalid
+      this.markFormGroupTouched(this.personalInfoForm);
       this.snackBar.open('Please fill in all required fields correctly', 'Close', {
-        duration: 3000
+        duration: 3000,
+        panelClass: ['warning-snackbar']
       });
     }
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
 }
 

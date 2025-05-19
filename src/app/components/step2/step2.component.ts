@@ -9,6 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { Router, RouterModule } from '@angular/router';
 import { KycService } from '../../services/kyc.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { StepProgressComponent } from '../../shared/components/step-progress/step-progress.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-step2',
@@ -21,7 +23,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    RouterModule // Add this import
+    RouterModule,
+    StepProgressComponent,
+    MatProgressSpinnerModule
   ],
   templateUrl: './step2.component.html',
   styleUrls: [

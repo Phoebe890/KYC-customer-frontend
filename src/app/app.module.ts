@@ -20,7 +20,6 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import { AppComponent } from './app.component';
-import { KycModule } from './kyc.module';
 import { routes } from './app.routes';
 import { CountyService } from './services/county.service';
 
@@ -46,9 +45,7 @@ import { CountyService } from './services/county.service';
     MatDatepickerModule,
     MatNativeDateModule,
     HttpClientModule,
-    MatSnackBarModule,
-    // Feature Modules
-    KycModule
+    MatSnackBarModule
   ],
   providers: [
     CountyService

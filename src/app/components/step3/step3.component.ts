@@ -1,15 +1,19 @@
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { Router } from '@angular/router';
+import { StepProgressComponent } from '../../shared/components/step-progress/step-progress.component';
 
 @Component({
   selector: 'app-step3',
+  templateUrl: './step3.component.html',
+  styleUrls: ['./step3.component.css'],
   standalone: true,
   imports: [
     CommonModule,
@@ -18,58 +22,47 @@ import { Router } from '@angular/router';
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
-    MatInputModule
-  ],
-  templateUrl: './step3.component.html',
-  styleUrls: [
-    '../../shared/styles/kyc-form.scss',
-    './step3.component.css'
+    MatInputModule,
+    StepProgressComponent
   ]
 })
 export class Step3Component implements OnInit {
-  stepNumber: number = 3;
-  stepTitle: string = 'Step 3';
-  stepDescription: string = 'Email verification';
-  isCompleted: boolean = false;
-  emailForm!: FormGroup;
-  currentStep: number = 3;
+  emailForm: FormGroup;
 
   constructor(
+    private formBuilder: FormBuilder,
     private router: Router,
-    private formBuilder: FormBuilder
+    private snackBar: MatSnackBar
   ) {
-    this.currentStep = 3;
-  }
-
-  ngOnInit() {
     this.emailForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]]
     });
+  }
+
+  ngOnInit() {
+    // Load saved data if any
+    const savedData = localStorage.getItem('step3Data');
+    if (savedData) {
+      this.emailForm.patchValue(JSON.parse(savedData));
+    }
   }
 
   onBack() {
     this.router.navigate(['/step2']);
   }
 
-  onFinish() {
+  onSubmit() {
     if (this.emailForm.valid) {
-      this.isCompleted = true;
-      console.log('KYC process completed', this.emailForm.value);
-      this.router.navigate(['/']);
-    }
-  }
-
-  onStepClick(step: number) {
-    switch (step) {
-      case 1:
-        this.router.navigate(['/step1']);
-        break;
-      case 2:
-        this.router.navigate(['/step2']);
-        break;
-      case 3:
-        // Already on step 3
-        break;
+      localStorage.setItem('step3Data', JSON.stringify(this.emailForm.value));
+      this.router.navigate(['/success']).then(() => {
+        this.snackBar.open('Email verification completed successfully', 'Close', {
+          duration: 3000
+        });
+      });
+    } else {
+      this.snackBar.open('Please enter a valid email address', 'Close', {
+        duration: 3000
+      });
     }
   }
 }
