@@ -29,13 +29,14 @@
 
     <app-step-progress [currentStep]="1"></app-step-progress>
 
-    <form [formGroup]="personalInfoForm" class="form-section" (ngSubmit)="onNext()">
+    <form  class="form-section" (ngSubmit)="onNext()">
       <div class="form-row">
         <mat-form-field appearance="outline">
-          <mat-label>Full Name</mat-label>
+          <mat-label>First Name</mat-label>
           <input matInput 
-                 formControlName="fullName" 
-                 placeholder="Enter your full name"
+                 name="firstName" 
+                 [(ngModel)]="personal_details().firstName"
+                 placeholder="Enter your first name"
                  [attr.aria-label]="'Full Name'"
                  [attr.aria-required]="true"
                  autocomplete="name">
@@ -47,6 +48,25 @@
           </mat-error>
         </mat-form-field>
 
+
+        <mat-form-field appearance="outline">
+          <mat-label>Last Name</mat-label>
+          <input matInput 
+                 name="lastName" 
+                 placeholder="Enter your last name"
+                 [attr.aria-label]="'Full Name'"
+                 [attr.aria-required]="true"
+                 autocomplete="name">
+          <mat-error *ngIf="personalInfoForm.get('fullName')?.hasError('required')">
+            Full name is required
+          </mat-error>
+          <mat-error *ngIf="personalInfoForm.get('fullName')?.hasError('minlength')">
+            Name must be at least 2 characters
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
         <div class="phone-field">
           <label id="phone-label">Phone Number</label>
           <div class="phone-input-wrapper">
@@ -77,9 +97,7 @@
             Please enter a valid phone number
           </div>
         </div>
-      </div>
 
-      <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>Employment Status</mat-label>
           <mat-select formControlName="employmentStatus" 
@@ -93,7 +111,9 @@
             Employment status is required
           </mat-error>
         </mat-form-field>
+      </div>
 
+      <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>Date of Birth</mat-label>
           <input matInput 
@@ -114,10 +134,8 @@
             You must be at least 18 years old
           </mat-error>
         </mat-form-field>
-      </div>
 
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="county-field">
+         <mat-form-field appearance="outline" class="county-field">
           <mat-label>County</mat-label>
           <mat-select formControlName="county" 
                       [attr.aria-label]="'County'"
@@ -134,6 +152,10 @@
           </mat-error>
         </mat-form-field>
       </div>
+
+      <!-- <div class="form-row">
+       
+      </div> -->
 
       <div class="action-buttons">
         <button mat-stroked-button 

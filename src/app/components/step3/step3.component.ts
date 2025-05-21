@@ -9,6 +9,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { StepProgressComponent } from '../../shared/components/step-progress/step-progress.component';
+import { KycService } from '../../services/kyc.service';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-step3',
@@ -23,16 +25,19 @@ import { StepProgressComponent } from '../../shared/components/step-progress/ste
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    StepProgressComponent
+    StepProgressComponent,
+    MatProgressSpinnerModule
   ]
 })
 export class Step3Component implements OnInit {
   emailForm: FormGroup;
+  isSubmitting: boolean = false;
 
   constructor(
     private formBuilder: FormBuilder,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private kycService: KycService
   ) {
     this.emailForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]]
@@ -52,12 +57,30 @@ export class Step3Component implements OnInit {
   }
 
   onSubmit() {
-    if (this.emailForm.valid) {
-      localStorage.setItem('step3Data', JSON.stringify(this.emailForm.value));
-      this.router.navigate(['/success']).then(() => {
-        this.snackBar.open('Email verification completed successfully', 'Close', {
-          duration: 3000
-        });
+    if (this.emailForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
+      const email = this.emailForm.get('email')?.value;
+
+      this.kycService.submitEmail(email).subscribe({
+        next: (response) => {
+          // Save form data to localStorage
+          localStorage.setItem('step3Data', JSON.stringify(this.emailForm.value));
+          
+          this.router.navigate(['/success']).then(() => {
+            this.snackBar.open('Email verification completed successfully', 'Close', {
+              duration: 3000
+            });
+          });
+        },
+        error: (error) => {
+          console.error('Error submitting email:', error);
+          this.snackBar.open('Error verifying email. Please try again.', 'Close', {
+            duration: 5000
+          });
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        }
       });
     } else {
       this.snackBar.open('Please enter a valid email address', 'Close', {

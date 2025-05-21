@@ -81,7 +81,7 @@
     <form [formGroup]="documentForm" class="form-section">
       <div class="form-header">
         <h3 class="form-title">Selfie Verification</h3>
-        <p class="form-description">Take a clear selfie holding your ID document</p>
+        <p class="form-description">Take a clear selfie of your face</p>
       </div>
 
       <div class="upload-section">
@@ -90,7 +90,7 @@
           <div *ngIf="!selfiePreview" class="upload-placeholder">
             <mat-icon class="upload-icon">photo_camera</mat-icon>
             <p>Click to take or upload a selfie</p>
-            <span class="file-hint">Make sure your face and ID are clearly visible</span>
+            <span class="file-hint">Make sure yourface  clearly visible</span>
           </div>
           <div *ngIf="selfiePreview" class="preview-wrapper">
             <img [src]="selfiePreview" alt="Selfie preview" class="preview-image">
@@ -102,15 +102,25 @@
       </div>
 
       <div class="action-buttons">
-        <button mat-stroked-button (click)="onBack()">
+        <button mat-stroked-button 
+                class="back-button nav-button" 
+                type="button"
+                [disabled]="isSubmitting"
+                (click)="onBack()"
+                aria-label="Back button">
           <mat-icon>arrow_back</mat-icon>
           Back
         </button>
-        <button mat-flat-button color="primary" 
+        <button mat-flat-button 
+                color="primary" 
+                class="next-button nav-button" 
+                type="submit"
+                [disabled]="idForm.invalid || documentForm.invalid || isSubmitting"
                 (click)="onNext()"
-                [disabled]="!idForm.valid || !documentForm.valid">
-          Next
-          <mat-icon>arrow_forward</mat-icon>
+                aria-label="Next button">
+          <span>Next</span>
+          <mat-icon *ngIf="!isSubmitting">arrow_forward</mat-icon>
+          <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
         </button>
       </div>
     </form>

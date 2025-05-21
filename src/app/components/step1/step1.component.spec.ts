@@ -48,5 +48,5 @@ describe('Step1Component', () => {
     expect(Object.keys(component.personalInfoForm.controls).length).toBe(5);
   });
 
-  // Add more tests for form validity, input interactions, etc. if needed.
+  
 });

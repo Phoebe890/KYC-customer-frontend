@@ -52,17 +52,25 @@
       </mat-form-field>
 
       <div class="action-buttons">
-        <button mat-stroked-button (click)="onBack()">
+        <button mat-stroked-button 
+                class="back-button nav-button" 
+                type="button"
+                [disabled]="isSubmitting"
+                (click)="onBack()"
+                aria-label="Back button">
           <mat-icon>arrow_back</mat-icon>
           Back
         </button>
         <button mat-flat-button 
                 color="primary" 
+                class="next-button nav-button" 
+                type="submit"
+                [disabled]="emailForm.invalid || isSubmitting"
                 (click)="onSubmit()"
-                [disabled]="!emailForm.valid"
-                class="submit-button">
-          Submit
-          <mat-icon>task_alt</mat-icon>
+                aria-label="Submit button">
+          <span>Submit</span>
+          <mat-icon *ngIf="!isSubmitting">send</mat-icon>
+          <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
         </button>
       </div>
     </form>

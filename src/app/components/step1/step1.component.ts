@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormControl, FormGroup, FormBuilder, Validators, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CountyService } from '../../services/county.service';
+import { KycService } from '../../services/kyc.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -23,8 +24,8 @@ import { Step1FormData, EmploymentStatus } from '../../models/step1.interface';
   selector: 'app-step1',
   standalone: true,
   imports: [
+    FormsModule,
     CommonModule,
-    ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -47,6 +48,19 @@ export class Step1Component implements OnInit {
   isLoadingCounties = false;
   isSubmitting = false;
   
+personal_details = signal({
+  firstName:"",
+  lastName:"",
+  phoneNumber:"",
+  employmentStatus:"",
+  county:"",
+  selfieImageUrl:null,
+  frontPhotoIdUrl:null,
+  backPhotoIdUrl:null,
+  email:null,
+  isCaptured:false
+})
+
   counties: string[] = [];
   CountryISO = CountryISO;
   SearchCountryField = SearchCountryField;
@@ -79,10 +93,16 @@ export class Step1Component implements OnInit {
     private formBuilder: FormBuilder,
     private router: Router,
     private countyService: CountyService,
+    private kycService: KycService,
     private snackBar: MatSnackBar
   ) {
     this.personalInfoForm = this.formBuilder.group({
-      fullName: ['', [
+      firstName: ['', [
+        Validators.required, 
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-Z\s'-]+$/)
+      ]],
+      lastName: ['', [
         Validators.required, 
         Validators.minLength(2),
         Validators.pattern(/^[a-zA-Z\s'-]+$/)
@@ -96,7 +116,7 @@ export class Step1Component implements OnInit {
 
   ngOnInit() {
     this.loadCounties();
-    this.loadSavedData();
+    //this.loadSavedData();
     this.setupFormValidation();
   }
 
@@ -152,7 +172,7 @@ export class Step1Component implements OnInit {
     return age >= 18;
   };
 
-  loadSavedData() {
+ /* loadSavedData() {
     const savedData = localStorage.getItem('step1Data');
     if (savedData) {
       try {
@@ -168,7 +188,7 @@ export class Step1Component implements OnInit {
         this.snackBar.open('Error loading saved data', 'Close', { duration: 3000 });
       }
     }
-  }
+  }*/
 
   loadCounties() {
     this.isLoadingCounties = true;
@@ -189,35 +209,68 @@ export class Step1Component implements OnInit {
   }
 
   onNext() {
-    if (this.personalInfoForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
-      const formData = this.personalInfoForm.getRawValue();
+    console.log(this.personal_details());
+    // if (this.personalInfoForm.valid && !this.isSubmitting) {
+    //   this.isSubmitting = true;
+    //   const formData = this.personalInfoForm.getRawValue();
       
-      try {
-        localStorage.setItem('step1Data', JSON.stringify(formData));
-        
-        this.router.navigate(['/step2']).then(() => {
-          this.isSubmitting = false;
-          this.snackBar.open('Personal information saved successfully', 'Close', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
-        });
-      } catch (error) {
-        console.error('Error saving form data:', error);
-        this.isSubmitting = false;
-        this.snackBar.open('Error saving data. Please try again.', 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
-      }
-    } else {
-      this.markFormGroupTouched(this.personalInfoForm);
-      this.snackBar.open('Please fill in all required fields correctly', 'Close', {
-        duration: 3000,
-        panelClass: ['warning-snackbar']
-      });
-    }
+    //   // Create FormData object
+    //   const submitData = new FormData();
+    //   submitData.append('firstName', formData.fullName);
+      
+    //   // Format phone number - get the international format
+    //   const phoneNumber = formData.phoneNumber?.e164Number || formData.phoneNumber?.number;
+    //   console.log('Phone number object:', formData.phoneNumber);
+    //   console.log('Extracted phone number:', phoneNumber);
+      
+    //   submitData.append('phoneNumber', phoneNumber);
+    //   submitData.append('employmentStatus', formData.employmentStatus);
+    //   submitData.append('dateOfBirth', formData.dateOfBirth);
+    //   submitData.append('county', formData.county);
+
+    //   console.log('Submitting form data:', {
+    //     fullName: formData.fullName,
+    //     phoneNumber: phoneNumber,
+    //     employmentStatus: formData.employmentStatus,
+    //     dateOfBirth: formData.dateOfBirth,
+    //     county: formData.county
+    //   });
+
+    //   // Call the service
+    //   this.kycService.submitPersonalInfo(submitData).subscribe({
+    //     next: (response) => {
+    //       console.log('Response from server:', response);
+    //       this.router.navigate(['/step2']);
+    //       this.snackBar.open('Personal information saved successfully', 'Close', {
+    //         duration: 3000,
+    //         panelClass: ['success-snackbar']
+    //       });
+    //     },
+    //     error: (error) => {
+    //       console.error('Error submitting form:', error);
+    //       if (error.status === 409) {
+    //         this.snackBar.open('This phone number is already registered. Please use a different number or contact support if you need help with your existing registration.', 'Close', {
+    //           duration: 8000,
+    //           panelClass: ['error-snackbar']
+    //         });
+    //       } else {
+    //         this.snackBar.open('Error submitting form. Please try again.', 'Close', {
+    //           duration: 5000,
+    //           panelClass: ['error-snackbar']
+    //         });
+    //       }
+    //     },
+    //     complete: () => {
+    //       this.isSubmitting = false;
+    //     }
+    //   });
+    // } else {
+    //   this.markFormGroupTouched(this.personalInfoForm);
+    //   this.snackBar.open('Please fill in all required fields correctly', 'Close', {
+    //     duration: 3000,
+    //     panelClass: ['warning-snackbar']
+    //   });
+    // }
   }
 
   private markFormGroupTouched(formGroup: FormGroup) {

@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-welcome',
+  selector: 'app-welcome',//defines the html tag for the component
   standalone: true,
   imports: [
     CommonModule,
@@ -17,7 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './welcome.component.html',
   styleUrls: ['./welcome.component.css']
 })
-export class WelcomeComponent {
+export class WelcomeComponent {//starts the component class
   constructor(private router: Router) {}
 
   onContinue() {

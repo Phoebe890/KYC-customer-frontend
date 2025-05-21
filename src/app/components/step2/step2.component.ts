@@ -43,6 +43,7 @@ export class Step2Component implements OnInit {
   selfiePreview: string | null = null;
   currentStep: number = 2;
   isLoading: boolean = false;
+  isSubmitting: boolean = false;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -54,8 +55,7 @@ export class Step2Component implements OnInit {
   ngOnInit() {
     this.idForm = this.formBuilder.group({
       frontPhoto: ['', Validators.required],
-      backPhoto: ['', Validators.required],
-     // fullName: ['', Validators.required]
+      backPhoto: ['', Validators.required]
     });
     this.documentForm = this.formBuilder.group({
       selfie: [null, Validators.required]
@@ -73,9 +73,10 @@ export class Step2Component implements OnInit {
         const reader = new FileReader();
         reader.onload = (e: any) => {
           this.previews[type] = e.target.result;
-          this.idForm.patchValue({
-            [type + 'Photo']: file
-          });
+          // Update the form control with the File object
+          const controlName = type === 'front' ? 'frontPhoto' : 'backPhoto';
+          this.idForm.get(controlName)?.setValue(file);
+          console.log(`Set ${controlName}:`, file); // Debug log
           this.isLoading = false;
         };
         reader.onerror = () => {
@@ -115,7 +116,9 @@ export class Step2Component implements OnInit {
     if (file) {
       if (this.isValidImage(file)) {
         this.previewSelfie(file);
-        this.documentForm.patchValue({ selfie: file });
+        // Update the form control with the File object
+        this.documentForm.get('selfie')?.setValue(file);
+        console.log('Set selfie:', file); // Debug log
       } else {
         this.snackBar.open('Please upload a valid image file (JPG, PNG)', 'Close', {
           duration: 3000
@@ -142,36 +145,145 @@ export class Step2Component implements OnInit {
   }
 
   onNext() {
-    if (this.idForm.valid && this.documentForm.valid) {
+    if (this.idForm.valid && this.documentForm.valid && !this.isSubmitting) {
+      // Check if we have customer ID
+      const step1Data = localStorage.getItem('step1Data');
+      if (!step1Data) {
+        this.snackBar.open('Please complete step 1 first', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+        return;
+      }
+
       try {
-        const step2Data = {
-          idData: this.idForm.value,
-          documentData: {
-            ...this.documentForm.value,
-            selfiePreview: this.selfiePreview,
-            frontPhotoPreview: this.previews['front'],
-            backPhotoPreview: this.previews['back']
-          }
-        };
-        
-        localStorage.setItem('step2Data', JSON.stringify(step2Data));
+        const parsedData = JSON.parse(step1Data);
+        console.log('Parsed step1 data:', parsedData); // Debug log
 
-        this.snackBar.open('Documents saved successfully', 'Close', {
-          duration: 3000
-        });
+        // Check if we have a valid customerId
+        const customerId = parsedData.customerId;
+        if (!customerId) {
+          console.error('No customerId found in step1Data:', parsedData);
+          // Try to get the ID from the backend response
+          this.kycService.submitPersonalInfo(new FormData()).subscribe({
+            next: (response) => {
+              if (response && response.id) {
+                // Update the stored data with the customerId
+                const updatedData = {
+                  ...parsedData,
+                  customerId: response.id
+                };
+                localStorage.setItem('step1Data', JSON.stringify(updatedData));
+                // Continue with document upload
+                this.uploadDocuments(response.id);
+              } else {
+                this.snackBar.open('Unable to retrieve customer information. Please try step 1 again.', 'Close', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar']
+                });
+              }
+            },
+            error: (error) => {
+              console.error('Error retrieving customer ID:', error);
+              this.snackBar.open('Error retrieving customer information. Please try step 1 again.', 'Close', {
+                duration: 5000,
+                panelClass: ['error-snackbar']
+              });
+            }
+          });
+          return;
+        }
 
-        this.router.navigate(['/step3']);
+        this.uploadDocuments(customerId);
       } catch (error) {
-        console.error('Error saving data:', error);
-        this.snackBar.open('Error saving data. Please try again.', 'Close', {
-          duration: 3000
+        console.error('Error processing form data:', error);
+        this.snackBar.open('Error processing form data. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
         });
+        this.isSubmitting = false;
       }
     } else {
-      this.snackBar.open('Please fill all required fields and upload documents', 'Close', {
-        duration: 3000
+      this.markFormGroupTouched(this.idForm);
+      this.markFormGroupTouched(this.documentForm);
+      this.snackBar.open('Please upload all required documents', 'Close', {
+        duration: 3000,
+        panelClass: ['warning-snackbar']
       });
     }
+  }
+
+  private uploadDocuments(customerId: number) {
+    this.isSubmitting = true;
+    
+    // Create FormData for document upload
+    const formData = new FormData();
+    
+    // Get the files from the form controls
+    const frontPhoto = this.idForm.get('frontPhoto')?.value;
+    const backPhoto = this.idForm.get('backPhoto')?.value;
+    const selfie = this.documentForm.get('selfie')?.value;
+
+    console.log('Files from form:', { frontPhoto, backPhoto, selfie }); // Debug log
+
+    // Check if files exist and are valid
+    if (!frontPhoto || !backPhoto || !selfie) {
+      this.snackBar.open('Please upload all required documents', 'Close', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+      this.isSubmitting = false;
+      return;
+    }
+
+    // Append files to FormData with the correct field names
+    formData.append('frontPhotoId', frontPhoto);
+    formData.append('backPhotoId', backPhoto);
+    formData.append('selfieImage', selfie);
+
+    console.log('Submitting documents with customerId:', customerId);
+
+    // Submit documents
+    this.kycService.submitDocuments(formData).subscribe({
+      next: (response) => {
+        console.log('Documents submitted successfully:', response);
+        // Store the updated data
+        const step1Data = localStorage.getItem('step1Data');
+        if (step1Data) {
+          const parsedData = JSON.parse(step1Data);
+          const updatedData = {
+            ...parsedData,
+            documentsSubmitted: true
+          };
+          localStorage.setItem('step1Data', JSON.stringify(updatedData));
+        }
+        
+        this.router.navigate(['/step3']);
+        this.snackBar.open('Documents uploaded successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
+      },
+      error: (error) => {
+        console.error('Error submitting documents:', error);
+        this.snackBar.open('Error uploading documents. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      },
+      complete: () => {
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
 
   private loadSavedData() {
