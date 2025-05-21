@@ -1,11 +1,10 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { FormControl, FormGroup, FormBuilder, Validators, FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CountyService } from '../../services/county.service';
 import { KycService } from '../../services/kyc.service';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -25,6 +24,8 @@ import { Step1FormData, EmploymentStatus } from '../../models/step1.interface';
   standalone: true,
   imports: [
     FormsModule,
+    StepProgressComponent,
+    ReactiveFormsModule,
     CommonModule,
     MatCardModule,
     MatFormFieldModule,
@@ -35,7 +36,6 @@ import { Step1FormData, EmploymentStatus } from '../../models/step1.interface';
     MatIconModule,
     MatButtonModule,
     NgxIntlTelInputModule,
-    StepProgressComponent
   ],
   templateUrl: './step1.component.html',
   styleUrls: [
@@ -54,6 +54,7 @@ personal_details = signal({
   phoneNumber:"",
   employmentStatus:"",
   county:"",
+  dateOfBirth:"",
   selfieImageUrl:null,
   frontPhotoIdUrl:null,
   backPhotoIdUrl:null,

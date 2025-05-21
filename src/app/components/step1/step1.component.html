@@ -27,9 +27,9 @@
       </div>
     </div>
 
-    <app-step-progress [currentStep]="1"></app-step-progress>
+    <!-- <app-step-progress [current-step]="1"></app-step-progress> -->
 
-    <form  class="form-section" (ngSubmit)="onNext()">
+    <form class="form-section" (ngSubmit)="onNext()">
       <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>First Name</mat-label>
@@ -53,6 +53,7 @@
           <mat-label>Last Name</mat-label>
           <input matInput 
                  name="lastName" 
+                 [(ngModel)]="personal_details().lastName"
                  placeholder="Enter your last name"
                  [attr.aria-label]="'Full Name'"
                  [attr.aria-required]="true"
@@ -83,8 +84,7 @@
               [separateDialCode]="true"
               [searchCountryPlaceholder]="'Search country...'"
               [customPlaceholder]="'Enter phone number'"
-              name="phone"
-              formControlName="phoneNumber"
+              name="phoneNumber"
               [attr.aria-labelledby]="'phone-label'"
               [attr.aria-required]="true"
               autocomplete="tel">
@@ -100,7 +100,8 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Employment Status</mat-label>
-          <mat-select formControlName="employmentStatus" 
+          <mat-select name="employmentStatus" 
+                      [(ngModel)]="personal_details().employmentStatus"
                       [attr.aria-label]="'Employment Status'"
                       [attr.aria-required]="true">
             <mat-option *ngFor="let option of employmentOptions" [value]="option.value">
@@ -118,7 +119,8 @@
           <mat-label>Date of Birth</mat-label>
           <input matInput 
                  [matDatepicker]="picker" 
-                 formControlName="dateOfBirth" 
+                 [(ngModel)]="personal_details().dateOfBirth"
+                 name="dateOfBirth" 
                  [max]="maxDate" 
                  [matDatepickerFilter]="ageValidator"
                  placeholder="MM/DD/YYYY"
@@ -137,7 +139,8 @@
 
          <mat-form-field appearance="outline" class="county-field">
           <mat-label>County</mat-label>
-          <mat-select formControlName="county" 
+          <mat-select name="county" 
+                      [(ngModel)]="personal_details().county"
                       [attr.aria-label]="'County'"
                       [attr.aria-required]="true">
             <div class="loading-overlay" *ngIf="isLoadingCounties">
@@ -170,7 +173,6 @@
                 color="primary" 
                 class="next-button nav-button" 
                 type="submit"
-                [disabled]="personalInfoForm.invalid || isSubmitting"
                 aria-label="Next button">
           <span>Next</span>
           <mat-icon *ngIf="!isSubmitting">arrow_forward</mat-icon>
