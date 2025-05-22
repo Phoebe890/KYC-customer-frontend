@@ -45,7 +45,7 @@ describe('Step1Component', () => {
   it('should initialize the personalInfoForm', () => {
     expect(component.personalInfoForm).toBeDefined();
     expect(component.personalInfoForm instanceof FormGroup).toBeTrue();
-    expect(Object.keys(component.personalInfoForm.controls).length).toBe(5);
+    expect(Object.keys(component.personalInfoForm.controls).length).toBe(6);
   });
 
   

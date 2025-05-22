@@ -1,25 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-
-interface KycFormData {
-  // Step 1 - Personal Information
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  employmentStatus: string;
-  dateOfBirth: Date;
-  county: string;
-
-  // Step 2 - Document Information
-  idFront: File;
-  idBack: File;
-  selfie: File;
-
-  // Step 3 - Email Verification
-  email: string;
-}
+import { FormGroup } from '@angular/forms';
+import { Router } from '@angular/router';
 
 interface CustomerResponse {
   id: number;
@@ -32,11 +16,18 @@ interface CustomerResponse {
   county: string;
 }
 
+interface DocumentResponse {
+  frontPhotoIdUrl: string;
+  backPhotoIdUrl: string;
+  selfieImageUrl: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class KycService {
-  private apiUrl = 'http://localhost:8081'; // Base URL for API
+  private apiUrl = 'http://localhost:8081';
+  private route = inject(Router);
 
   constructor(private http: HttpClient) {}
 
@@ -44,81 +35,96 @@ export class KycService {
     return this.http.get(`${this.apiUrl}/status`);
   }
 
-  submitPersonalInfo(formData: FormData): Observable<CustomerResponse> {
-    console.log('Submitting personal info:', formData);
-    
-    // Format the date to YYYY-MM-DD
-    const dateOfBirth = formData.get('dateOfBirth') as string;
-    const formattedDate = new Date(dateOfBirth).toISOString().split('T')[0];
-    
-    // Get and format phone number
-    const phoneNumber = formData.get('phoneNumber') as string;
-    console.log('Raw phone number from form:', phoneNumber);
-    
-    // Convert FormData to JSON object
-    const jsonData = {
-      fullName: formData.get('fullName'),
-      phoneNumber: phoneNumber,
-      employmentStatus: formData.get('employmentStatus'),
+  /**
+   * Accepts customer details and submits them to the backend
+   */
+  submitPersonalDetails(customerData: {
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    employmentStatus: string;
+    dateOfBirth: Date | string;
+    county: string;
+    selfieImageUrl: string | null;
+    frontPhotoIdUrl: string | null;
+    backPhotoIdUrl: string | null;
+    email: string | null;
+    isCaptured: boolean;
+  }): Observable<CustomerResponse> {
+    // Format the date if it's a Date object
+    const formattedDate = customerData.dateOfBirth instanceof Date 
+      ? customerData.dateOfBirth.toISOString().split('T')[0]
+      : customerData.dateOfBirth;
+
+    const payload = {
+      firstName: customerData.firstName,
+      lastName: customerData.lastName,
+      phoneNumber: customerData.phoneNumber,
+      employmentStatus: customerData.employmentStatus,
       dateOfBirth: formattedDate,
-      county: formData.get('county')
+      county: customerData.county,
+      selfieImageUrl: customerData.selfieImageUrl,
+      frontPhotoIdUrl: customerData.frontPhotoIdUrl,
+      backPhotoIdUrl: customerData.backPhotoIdUrl,
+      email: customerData.email,
+      isCaptured: customerData.isCaptured
     };
 
-    console.log('Sending JSON data:', jsonData);
+    console.log('Sending payload to backend:', payload); // Debug log
 
-    return this.http.post<CustomerResponse>(`${this.apiUrl}/new-customer`, jsonData, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }).pipe(
+    return this.http.post<CustomerResponse>(`${this.apiUrl}/new-customer`, payload).pipe(
       tap(response => {
-        console.log('Raw response from server:', response);
-        // Store the customerId from the response
-        if (response) {
-          // Check what fields are available in the response
-          console.log('Response fields:', Object.keys(response));
-          
-          const dataToStore = {
-            ...jsonData,
-            customerId: response.id || response.customerId // Try both possible fields
-          };
-          
-          console.log('Data being stored:', dataToStore);
-          localStorage.setItem('step1Data', JSON.stringify(dataToStore));
-          
-          // Verify the stored data
-          const storedData = localStorage.getItem('step1Data');
-          console.log('Verified stored data:', storedData);
-        } else {
-          console.error('Invalid response:', response);
-        }
+        const storedData = {
+          ...payload,
+          customerId: response.id || response.customerId
+        };
+        localStorage.setItem('step1Data', JSON.stringify(storedData));
+        localStorage.setItem('customerId', storedData.customerId.toString());
+        console.log('Customer created successfully:', response);
       }),
       catchError(error => {
-        console.error('API Error:', error);
+        console.error('Failed to submit personal details:', error);
         throw error;
       })
     );
   }
 
-  submitDocuments(formData: FormData): Observable<any> {
-    console.log('Submitting documents:', formData);
-    // Get customerId from localStorage
+  submitDocuments(formData: FormData): Observable<DocumentResponse> {
     const step1Data = localStorage.getItem('step1Data');
-    if (!step1Data) {
-      throw new Error('Customer information not found. Please complete step 1 first.');
-    }
+    if (!step1Data) throw new Error('Customer information not found. Complete step 1 first.');
+
+    const { customerId } = JSON.parse(step1Data);
+    if (!customerId) throw new Error('Customer ID not found.');
+
+    console.log('Submitting documents for customerId:', customerId);
     
-    const parsedData = JSON.parse(step1Data);
-    const customerId = parsedData.customerId;
-    
-    if (!customerId) {
-      throw new Error('Customer ID not found. Please complete step 1 first.');
-    }
-    
-    console.log('Using customer ID:', customerId); // Add this for debugging
-    
-    return this.http.put(`${this.apiUrl}/upload-documents/${customerId}`, formData).pipe(
-      tap(response => console.log('Documents Response:', response)),
+    // Log FormData contents safely
+    const formDataEntries = Array.from(formData.entries());
+    console.log('FormData contents:', formDataEntries.map(([key, value]) => ({
+      key,
+      value: value instanceof File ? value.name : value
+    })));
+
+    // Add customerId to the FormData
+    formData.append('customerId', customerId.toString());
+
+    return this.http.put<DocumentResponse>(`${this.apiUrl}/upload-documents/${customerId}`, formData, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    }).pipe(
+      tap(response => {
+        console.log('Documents Response:', response);
+        // Update the stored data to include document URLs
+        const updatedData = {
+          ...JSON.parse(step1Data),
+          frontPhotoIdUrl: response.frontPhotoIdUrl,
+          backPhotoIdUrl: response.backPhotoIdUrl,
+          selfieImageUrl: response.selfieImageUrl,
+          documentsSubmitted: true
+        };
+        localStorage.setItem('step1Data', JSON.stringify(updatedData));
+      }),
       catchError(error => {
         console.error('Documents API Error:', error);
         throw error;
@@ -127,28 +133,17 @@ export class KycService {
   }
 
   submitEmail(email: string): Observable<any> {
-    console.log('Submitting email:', email);
-    // Get customerId from localStorage
     const step1Data = localStorage.getItem('step1Data');
-    if (!step1Data) {
-      throw new Error('Customer information not found. Please complete step 1 first.');
-    }
-    
-    const parsedData = JSON.parse(step1Data);
-    const customerId = parsedData.customerId;
-    
-    if (!customerId) {
-      throw new Error('Customer ID not found. Please complete step 1 first.');
-    }
+    if (!step1Data) throw new Error('Customer information not found. Complete step 1 first.');
 
-    // Create URLSearchParams for email upload
+    const { customerId } = JSON.parse(step1Data);
+    if (!customerId) throw new Error('Customer ID not found.');
+
     const params = new URLSearchParams();
     params.append('email', email);
 
     return this.http.put(`${this.apiUrl}/upload-email/${customerId}?${params.toString()}`, null, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).pipe(
       tap(response => console.log('Email Response:', response)),
       catchError(error => {
@@ -158,19 +153,26 @@ export class KycService {
     );
   }
 
-  // Helper method to prepare FormData
-  prepareFormData(data: any): FormData {
+  /**
+   * Converts JS Date to 'YYYY-MM-DD'
+   */
+  private formatDate(date: Date | string): string {
+    const d = new Date(date);
+    return d.toISOString().split('T')[0];
+  }
+
+  /**
+   * Converts raw data + files to FormData
+   */
+  prepareFormData(data: Record<string, any>): FormData {
     const formData = new FormData();
-    
-    // Add form fields to FormData
-    Object.keys(data).forEach(key => {
-      if (data[key] instanceof File) {
-        formData.append(key, data[key], data[key].name);
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof File) {
+        formData.append(key, value, value.name);
       } else {
-        formData.append(key, data[key]);
+        formData.append(key, value);
       }
     });
-    
     return formData;
   }
 }

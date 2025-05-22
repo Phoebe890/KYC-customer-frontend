@@ -9,7 +9,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { Step2Component } from './step2.component';
 
 @NgModule({
-  declarations: [Step2Component],
+ // declarations: [Step2Component],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -19,6 +19,6 @@ import { Step2Component } from './step2.component';
     RouterModule,
     SharedModule
   ],
-  exports: [Step2Component]
+ // exports: [Step2Component]
 })
 export class Step2Module { } 
