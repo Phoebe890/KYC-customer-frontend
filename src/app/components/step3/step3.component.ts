@@ -61,30 +61,80 @@ export class Step3Component implements OnInit {
       this.isSubmitting = true;
       const email = this.emailForm.get('email')?.value;
 
-      this.kycService.submitEmail(email).subscribe({
-        next: (response) => {
-          // Save form data to localStorage
-          localStorage.setItem('step3Data', JSON.stringify(this.emailForm.value));
-          
-          this.router.navigate(['/success']).then(() => {
-            this.snackBar.open('Email verification completed successfully', 'Close', {
-              duration: 3000
-            });
+      // Check if we have step1 data and it's completed
+      const step1Data = localStorage.getItem('step1Data');
+      if (!step1Data) {
+        this.snackBar.open('Please complete step 1 first', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+        this.isSubmitting = false;
+        return;
+      }
+
+      try {
+        const parsedData = JSON.parse(step1Data);
+        console.log('Parsed step1 data:', parsedData);
+
+        // Check if we have a valid customerId
+        const customerId = parsedData.customerId;
+        if (!customerId) {
+          console.error('No customerId found in step1Data:', parsedData);
+          this.snackBar.open('Unable to find customer information. Please complete step 1 again.', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
           });
-        },
-        error: (error) => {
-          console.error('Error submitting email:', error);
-          this.snackBar.open('Error verifying email. Please try again.', 'Close', {
-            duration: 5000
-          });
-        },
-        complete: () => {
           this.isSubmitting = false;
+          return;
         }
-      });
+
+        console.log('Submitting email for customerId:', customerId);
+
+        this.kycService.submitEmail(email).subscribe({
+          next: (response) => {
+            console.log('Email submission response:', response);
+            
+            // Update the stored data to include email
+            const updatedData = {
+              ...parsedData,
+              email: email,
+              emailSubmitted: true
+            };
+            localStorage.setItem('step1Data', JSON.stringify(updatedData));
+            
+            // Save form data to localStorage
+            localStorage.setItem('step3Data', JSON.stringify(this.emailForm.value));
+            
+            this.router.navigate(['/success']).then(() => {
+              this.snackBar.open('Email verification completed successfully', 'Close', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+            });
+          },
+          error: (error) => {
+            console.error('Error submitting email:', error);
+            this.snackBar.open('Error verifying email. Please try again.', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+          },
+          complete: () => {
+            this.isSubmitting = false;
+          }
+        });
+      } catch (error) {
+        console.error('Error processing step1 data:', error);
+        this.snackBar.open('Error processing your information. Please try step 1 again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+        this.isSubmitting = false;
+      }
     } else {
       this.snackBar.open('Please enter a valid email address', 'Close', {
-        duration: 3000
+        duration: 3000,
+        panelClass: ['warning-snackbar']
       });
     }
   }

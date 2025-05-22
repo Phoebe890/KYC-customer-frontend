@@ -16,7 +16,7 @@ import { Step2Component } from './components/step2/step2.component';
 
 @NgModule({
   declarations: [
-    Step2Component
+   // Step2Component
   ],
   imports: [
     CommonModule,
@@ -33,7 +33,7 @@ import { Step2Component } from './components/step2/step2.component';
     RouterModule
   ],
   exports: [
-    Step2Component
+   // Step2Component
   ]
 })
 export class KycModule { } 

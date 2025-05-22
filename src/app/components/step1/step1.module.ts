@@ -12,9 +12,11 @@ import { SharedModule } from '../../shared/shared.module';
 import { Step1Component } from './step1.component';
 import { MatOptionModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
-
+import { StepProgressComponent } from '../../shared/components/step-progress/step-progress.component';
 @NgModule({
-  declarations: [Step1Component],
+  declarations: [//Step1Component,
+    
+  ],
   imports: [
     FormsModule,
     CommonModule,
@@ -30,6 +32,7 @@ import { MatSelectModule } from '@angular/material/select';
     NgxIntlTelInputModule,
     SharedModule
   ],
-  exports: [Step1Component]
+  exports: [//Step1Component
+    ]
 })
 export class Step1Module { } 

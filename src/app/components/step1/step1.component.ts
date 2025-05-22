@@ -18,11 +18,11 @@ import { CountryISO, PhoneNumberFormat, SearchCountryField } from 'ngx-intl-tel-
 import { StepProgressComponent } from '../../shared/components/step-progress/step-progress.component';
 import { DateFilterFn } from '@angular/material/datepicker';
 import { Step1FormData, EmploymentStatus } from '../../models/step1.interface';
-
+import { HttpErrorResponse } from '@angular/common/http';
 @Component({
   selector: 'app-step1',
   standalone: true,
-  imports: [
+  imports: [//import all necessary imports for this standalone component
     FormsModule,
     StepProgressComponent,
     ReactiveFormsModule,
@@ -44,6 +44,7 @@ import { Step1FormData, EmploymentStatus } from '../../models/step1.interface';
   ]
 })
 export class Step1Component implements OnInit {
+  //reactive form instance
   personalInfoForm: FormGroup;
   isLoadingCounties = false;
   isSubmitting = false;
@@ -61,7 +62,7 @@ personal_details = signal({
   email:null,
   isCaptured:false
 })
-
+//counties dropdown options
   counties: string[] = [];
   CountryISO = CountryISO;
   SearchCountryField = SearchCountryField;
@@ -78,6 +79,19 @@ personal_details = signal({
     SearchCountryField.Name,
     SearchCountryField.DialCode
   ];
+
+   // Signal to store phone data
+  phoneSignal = signal<any>(null);
+
+  onPhoneChange(phone: any) {
+    this.phoneSignal.set(phone);
+    console.log('Phone Signal:', this.phoneSignal());
+    const fullPhoneNumber = this.phoneSignal()?.e164Number;
+    this.personal_details.update(current => ({
+      ...current,
+      phoneNumber:fullPhoneNumber
+    }));
+  }
   
   maxDate: Date = new Date();
   startDate: Date = new Date(1990, 0, 1);
@@ -97,6 +111,8 @@ personal_details = signal({
     private kycService: KycService,
     private snackBar: MatSnackBar
   ) {
+
+  //initialize reactive forms with validators
     this.personalInfoForm = this.formBuilder.group({
       firstName: ['', [
         Validators.required, 
@@ -116,13 +132,13 @@ personal_details = signal({
   }
 
   ngOnInit() {
-    this.loadCounties();
+    this.loadCounties();//fetch county list
     //this.loadSavedData();
     this.setupFormValidation();
   }
 
   private setupFormValidation() {
-    // Monitor phone number changes for validation
+    // set up real time validation for phone and date of birth
     this.personalInfoForm.get('phoneNumber')?.valueChanges.subscribe(value => {
       if (value && typeof value === 'object' && 'valid' in value) {
         if (value.valid) {
@@ -191,6 +207,7 @@ personal_details = signal({
     }
   }*/
 
+    //fetch counties from the backend service
   loadCounties() {
     this.isLoadingCounties = true;
     this.countyService.getCounties().subscribe({
@@ -210,68 +227,74 @@ personal_details = signal({
   }
 
   onNext() {
-    console.log(this.personal_details());
-    // if (this.personalInfoForm.valid && !this.isSubmitting) {
-    //   this.isSubmitting = true;
-    //   const formData = this.personalInfoForm.getRawValue();
+    if (this.personalInfoForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
+      const formData = this.personalInfoForm.getRawValue();
       
-    //   // Create FormData object
-    //   const submitData = new FormData();
-    //   submitData.append('firstName', formData.fullName);
+      // Format phone number - get the international format
+      const phoneNumber = formData.phoneNumber?.e164Number || formData.phoneNumber?.number;
       
-    //   // Format phone number - get the international format
-    //   const phoneNumber = formData.phoneNumber?.e164Number || formData.phoneNumber?.number;
-    //   console.log('Phone number object:', formData.phoneNumber);
-    //   console.log('Extracted phone number:', phoneNumber);
-      
-    //   submitData.append('phoneNumber', phoneNumber);
-    //   submitData.append('employmentStatus', formData.employmentStatus);
-    //   submitData.append('dateOfBirth', formData.dateOfBirth);
-    //   submitData.append('county', formData.county);
+      // Create the payload object with all required fields
+      const payload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phoneNumber: phoneNumber,
+        employmentStatus: formData.employmentStatus,
+        dateOfBirth: formData.dateOfBirth,
+        county: formData.county,
+        selfieImageUrl: null,
+        frontPhotoIdUrl: null,
+        backPhotoIdUrl: null,
+        email: null,
+        isCaptured: false
+      };
 
-    //   console.log('Submitting form data:', {
-    //     fullName: formData.fullName,
-    //     phoneNumber: phoneNumber,
-    //     employmentStatus: formData.employmentStatus,
-    //     dateOfBirth: formData.dateOfBirth,
-    //     county: formData.county
-    //   });
+      console.log('Form data before submission:', formData); // Debug log
+      console.log('Payload being sent:', payload); // Debug log
 
-    //   // Call the service
-    //   this.kycService.submitPersonalInfo(submitData).subscribe({
-    //     next: (response) => {
-    //       console.log('Response from server:', response);
-    //       this.router.navigate(['/step2']);
-    //       this.snackBar.open('Personal information saved successfully', 'Close', {
-    //         duration: 3000,
-    //         panelClass: ['success-snackbar']
-    //       });
-    //     },
-    //     error: (error) => {
-    //       console.error('Error submitting form:', error);
-    //       if (error.status === 409) {
-    //         this.snackBar.open('This phone number is already registered. Please use a different number or contact support if you need help with your existing registration.', 'Close', {
-    //           duration: 8000,
-    //           panelClass: ['error-snackbar']
-    //         });
-    //       } else {
-    //         this.snackBar.open('Error submitting form. Please try again.', 'Close', {
-    //           duration: 5000,
-    //           panelClass: ['error-snackbar']
-    //         });
-    //       }
-    //     },
-    //     complete: () => {
-    //       this.isSubmitting = false;
-    //     }
-    //   });
-    // } else {
-    //   this.markFormGroupTouched(this.personalInfoForm);
-    //   this.snackBar.open('Please fill in all required fields correctly', 'Close', {
-    //     duration: 3000,
-    //     panelClass: ['warning-snackbar']
-    //   });
-    // }
+      // Submit to the backend
+      this.kycService.submitPersonalDetails(payload).subscribe({
+        next: (response) => {
+          console.log('Response from server:', response);
+          // Store the customer ID and data in localStorage
+          const storedData = {
+            ...payload,
+            customerId: response.id || response.customerId
+          };
+          localStorage.setItem('step1Data', JSON.stringify(storedData));
+          localStorage.setItem('customerId', storedData.customerId.toString());
+          
+          this.router.navigate(['/step2']);
+          this.snackBar.open('Personal information saved successfully', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+        },
+        error: (error) => {
+          console.error('Error submitting form:', error);
+          if (error.status === 409) {
+            this.snackBar.open('This phone number is already registered. Please use a different number or contact support if you need help with your existing registration.', 'Close', {
+              duration: 8000,
+              panelClass: ['error-snackbar']
+            });
+          } else {
+            this.snackBar.open('Error submitting form. Please try again.', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+          }
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        }
+      });
+    } else {
+      this.markFormGroupTouched(this.personalInfoForm);
+      this.snackBar.open('Please fill in all required fields correctly', 'Close', {
+        duration: 3000,
+        panelClass: ['warning-snackbar']
+      });
+    }
   }
 
   private markFormGroupTouched(formGroup: FormGroup) {

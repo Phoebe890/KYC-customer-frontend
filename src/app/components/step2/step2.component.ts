@@ -34,8 +34,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   ]
 })
 export class Step2Component implements OnInit {
+  //form groups for ID and selfie
   idForm!: FormGroup;
   documentForm!: FormGroup;
+  //image preview data
   previews: { [key: string]: string } = {
     front: '',
     back: ''
@@ -53,6 +55,7 @@ export class Step2Component implements OnInit {
   ) {}
 
   ngOnInit() {
+//initialize from group with validation
     this.idForm = this.formBuilder.group({
       frontPhoto: ['', Validators.required],
       backPhoto: ['', Validators.required]
@@ -64,7 +67,7 @@ export class Step2Component implements OnInit {
     // Load saved data if available
     this.loadSavedData();
   }
-
+//handles selection of front and back images
   onFileSelected(event: any, type: 'front' | 'back') {
     const file = event.target.files[0];
     if (file) {
@@ -75,7 +78,7 @@ export class Step2Component implements OnInit {
           this.previews[type] = e.target.result;
           // Update the form control with the File object
           const controlName = type === 'front' ? 'frontPhoto' : 'backPhoto';
-          this.idForm.get(controlName)?.setValue(file);
+          this.idForm.get(controlName)?.setValue(file);//store file in form control
           console.log(`Set ${controlName}:`, file); // Debug log
           this.isLoading = false;
         };
@@ -93,7 +96,7 @@ export class Step2Component implements OnInit {
       }
     }
   }
-
+//removes front/back ID image and resets the control
   removeImage(type: 'front' | 'back') {
     this.previews[type] = '';
     this.idForm.patchValue({
@@ -105,12 +108,12 @@ export class Step2Component implements OnInit {
       input.value = '';
     }
   }
-
+//checks if the uploaded file is a supported image type
   private isValidImage(file: File): boolean {
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     return validTypes.includes(file.type);
   }
-
+//handles selfie file input and preview
   onSelfieSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
@@ -126,7 +129,7 @@ export class Step2Component implements OnInit {
       }
     }
   }
-
+//generates selfie preview from file
   private previewSelfie(file: File) {
     const reader = new FileReader();
     reader.onload = () => {
@@ -134,7 +137,7 @@ export class Step2Component implements OnInit {
     };
     reader.readAsDataURL(file);
   }
-
+//clears selfie preview and resets the form value
   removeSelfie() {
     this.selfiePreview = null;
     this.documentForm.patchValue({ selfie: null });
@@ -146,58 +149,84 @@ export class Step2Component implements OnInit {
 
   onNext() {
     if (this.idForm.valid && this.documentForm.valid && !this.isSubmitting) {
-      // Check if we have customer ID
+      this.isSubmitting = true;
+      
+      // Check if we have step1 data and it's completed
       const step1Data = localStorage.getItem('step1Data');
       if (!step1Data) {
         this.snackBar.open('Please complete step 1 first', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar']
         });
+        this.isSubmitting = false;
         return;
       }
 
       try {
         const parsedData = JSON.parse(step1Data);
-        console.log('Parsed step1 data:', parsedData); // Debug log
+        console.log('Parsed step1 data:', parsedData);
 
         // Check if we have a valid customerId
         const customerId = parsedData.customerId;
         if (!customerId) {
           console.error('No customerId found in step1Data:', parsedData);
-          // Try to get the ID from the backend response
-          this.kycService.submitPersonalInfo(new FormData()).subscribe({
-            next: (response) => {
-              if (response && response.id) {
-                // Update the stored data with the customerId
-                const updatedData = {
-                  ...parsedData,
-                  customerId: response.id
-                };
-                localStorage.setItem('step1Data', JSON.stringify(updatedData));
-                // Continue with document upload
-                this.uploadDocuments(response.id);
-              } else {
-                this.snackBar.open('Unable to retrieve customer information. Please try step 1 again.', 'Close', {
-                  duration: 5000,
-                  panelClass: ['error-snackbar']
-                });
-              }
-            },
-            error: (error) => {
-              console.error('Error retrieving customer ID:', error);
-              this.snackBar.open('Error retrieving customer information. Please try step 1 again.', 'Close', {
-                duration: 5000,
-                panelClass: ['error-snackbar']
-              });
-            }
+          this.snackBar.open('Unable to find customer information. Please complete step 1 again.', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
           });
+          this.isSubmitting = false;
           return;
         }
 
-        this.uploadDocuments(customerId);
+        // Create FormData for document upload
+        const formData = new FormData();
+        const frontPhoto = this.idForm.get('frontPhoto')?.value;
+        const backPhoto = this.idForm.get('backPhoto')?.value;
+        const selfie = this.documentForm.get('selfie')?.value;
+
+        // Append files with the correct field names expected by the backend
+        if (frontPhoto) formData.append('frontPhotoId', frontPhoto);
+        if (backPhoto) formData.append('backPhotoId', backPhoto);
+        if (selfie) formData.append('selfieImage', selfie);
+
+        console.log('Submitting documents for customerId:', customerId);
+        console.log('Form data being sent:', {
+          frontPhoto: frontPhoto?.name,
+          backPhoto: backPhoto?.name,
+          selfie: selfie?.name
+        });
+
+        // Submit documents
+        this.kycService.submitDocuments(formData).subscribe({
+          next: (response) => {
+            console.log('Documents uploaded successfully:', response);
+            // Update the stored data to include document submission status
+            const updatedData = {
+              ...parsedData,
+              documentsSubmitted: true
+            };
+            localStorage.setItem('step1Data', JSON.stringify(updatedData));
+            
+            this.snackBar.open('Documents uploaded successfully', 'Close', {
+              duration: 3000,
+              panelClass: ['success-snackbar']
+            });
+            this.router.navigate(['/step3']);
+          },
+          error: (error) => {
+            console.error('Error uploading documents:', error);
+            this.snackBar.open('Error uploading documents. Please try again.', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+          },
+          complete: () => {
+            this.isSubmitting = false;
+          }
+        });
       } catch (error) {
-        console.error('Error processing form data:', error);
-        this.snackBar.open('Error processing form data. Please try again.', 'Close', {
+        console.error('Error processing step1 data:', error);
+        this.snackBar.open('Error processing your information. Please try step 1 again.', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar']
         });
@@ -211,70 +240,6 @@ export class Step2Component implements OnInit {
         panelClass: ['warning-snackbar']
       });
     }
-  }
-
-  private uploadDocuments(customerId: number) {
-    this.isSubmitting = true;
-    
-    // Create FormData for document upload
-    const formData = new FormData();
-    
-    // Get the files from the form controls
-    const frontPhoto = this.idForm.get('frontPhoto')?.value;
-    const backPhoto = this.idForm.get('backPhoto')?.value;
-    const selfie = this.documentForm.get('selfie')?.value;
-
-    console.log('Files from form:', { frontPhoto, backPhoto, selfie }); // Debug log
-
-    // Check if files exist and are valid
-    if (!frontPhoto || !backPhoto || !selfie) {
-      this.snackBar.open('Please upload all required documents', 'Close', {
-        duration: 5000,
-        panelClass: ['error-snackbar']
-      });
-      this.isSubmitting = false;
-      return;
-    }
-
-    // Append files to FormData with the correct field names
-    formData.append('frontPhotoId', frontPhoto);
-    formData.append('backPhotoId', backPhoto);
-    formData.append('selfieImage', selfie);
-
-    console.log('Submitting documents with customerId:', customerId);
-
-    // Submit documents
-    this.kycService.submitDocuments(formData).subscribe({
-      next: (response) => {
-        console.log('Documents submitted successfully:', response);
-        // Store the updated data
-        const step1Data = localStorage.getItem('step1Data');
-        if (step1Data) {
-          const parsedData = JSON.parse(step1Data);
-          const updatedData = {
-            ...parsedData,
-            documentsSubmitted: true
-          };
-          localStorage.setItem('step1Data', JSON.stringify(updatedData));
-        }
-        
-        this.router.navigate(['/step3']);
-        this.snackBar.open('Documents uploaded successfully', 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-      },
-      error: (error) => {
-        console.error('Error submitting documents:', error);
-        this.snackBar.open('Error uploading documents. Please try again.', 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
-      },
-      complete: () => {
-        this.isSubmitting = false;
-      }
-    });
   }
 
   private markFormGroupTouched(formGroup: FormGroup) {
@@ -314,6 +279,18 @@ export class Step2Component implements OnInit {
         return;
       }
     }
+
+    // Save Step 2 data as draft
+const step2Draft = {
+  idData: this.idForm.value,
+  documentData: {
+    ...this.documentForm.value,
+    selfiePreview: this.selfiePreview,
+    frontPhotoPreview: this.previews['front'],
+    backPhotoPreview: this.previews['back']
+  }
+};
+localStorage.setItem('step2Data', JSON.stringify(step2Draft));
 
     // Navigate to selected step
     this.router.navigate([`/step${step}`]);
