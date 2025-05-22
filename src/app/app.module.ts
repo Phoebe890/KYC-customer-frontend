@@ -25,7 +25,7 @@ import { CountyService } from './services/county.service';
 
 @NgModule({
   declarations: [
-    AppComponent
+    //AppComponent
   ],
   imports: [
     CommonModule,
@@ -50,6 +50,6 @@ import { CountyService } from './services/county.service';
   providers: [
     CountyService
   ],
-  bootstrap: [AppComponent]
+ // bootstrap: [AppComponent]
 })
 export class AppModule { }
