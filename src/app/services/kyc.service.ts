@@ -23,14 +23,14 @@ interface DocumentResponse {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root'//makes the service available in the app
 })
 export class KycService {
-  private apiUrl = 'http://localhost:8081';
+  private apiUrl = 'http://localhost:8081';//base url for the backend
   private route = inject(Router);
 
   constructor(private http: HttpClient) {}
-
+//get kyc status to show if verification is complete or pending
   getKycStatus(): Observable<any> {
     return this.http.get(`${this.apiUrl}/status`);
   }
@@ -55,7 +55,7 @@ export class KycService {
     const formattedDate = customerData.dateOfBirth instanceof Date 
       ? customerData.dateOfBirth.toISOString().split('T')[0]
       : customerData.dateOfBirth;
-
+//construct the payload to send to the backend
     const payload = {
       firstName: customerData.firstName,
       lastName: customerData.lastName,
@@ -71,9 +71,10 @@ export class KycService {
     };
 
     console.log('Sending payload to backend:', payload); // Debug log
-
+//send POST request to create a new customer
     return this.http.post<CustomerResponse>(`${this.apiUrl}/new-customer`, payload).pipe(
       tap(response => {
+        //on success ,store returned customerid and formdata in local storage
         const storedData = {
           ...payload,
           customerId: response.id || response.customerId
@@ -90,6 +91,7 @@ export class KycService {
   }
 
   submitDocuments(formData: FormData): Observable<DocumentResponse> {
+    //retrieve data stored from step1
     const step1Data = localStorage.getItem('step1Data');
     if (!step1Data) throw new Error('Customer information not found. Complete step 1 first.');
 
@@ -107,7 +109,7 @@ export class KycService {
 
     // Add customerId to the FormData
     formData.append('customerId', customerId.toString());
-
+//send PUT request to upload documents
     return this.http.put<DocumentResponse>(`${this.apiUrl}/upload-documents/${customerId}`, formData, {
       headers: {
         'Accept': 'application/json'
@@ -133,15 +135,16 @@ export class KycService {
   }
 
   submitEmail(email: string): Observable<any> {
+    //load step1 data from local storage
     const step1Data = localStorage.getItem('step1Data');
     if (!step1Data) throw new Error('Customer information not found. Complete step 1 first.');
 
     const { customerId } = JSON.parse(step1Data);
     if (!customerId) throw new Error('Customer ID not found.');
-
+//build URL parameters
     const params = new URLSearchParams();
     params.append('email', email);
-
+//send PUT request to upload email
     return this.http.put(`${this.apiUrl}/upload-email/${customerId}?${params.toString()}`, null, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).pipe(
@@ -162,10 +165,10 @@ export class KycService {
   }
 
   /**
-   * Converts raw data + files to FormData
+   * the method converts a javascript object into a formdata object which sends formdata to the backend
    */
   prepareFormData(data: Record<string, any>): FormData {
-    const formData = new FormData();
+    const formData = new FormData();//creates an empty formdata object
     Object.entries(data).forEach(([key, value]) => {
       if (value instanceof File) {
         formData.append(key, value, value.name);
@@ -173,6 +176,6 @@ export class KycService {
         formData.append(key, value);
       }
     });
-    return formData;
+    return formData;//returns the populated formdata object ready to be sent to the backend
   }
 }

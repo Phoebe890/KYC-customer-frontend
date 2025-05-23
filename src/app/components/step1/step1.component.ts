@@ -37,14 +37,14 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatButtonModule,
     NgxIntlTelInputModule,
   ],
-  templateUrl: './step1.component.html',
+  templateUrl: './step1.component.html',//specifies the html file
   styleUrls: [
     '../../shared/styles/kyc-form.scss',
     './step1.component.css'
   ]
 })
 export class Step1Component implements OnInit {
-  //reactive form instance
+  //reactive form group for personal info
   personalInfoForm: FormGroup;
   isLoadingCounties = false;
   isSubmitting = false;
@@ -108,7 +108,7 @@ personal_details = signal({
     private formBuilder: FormBuilder,
     private router: Router,
     private countyService: CountyService,
-    private kycService: KycService,
+    private kycService: KycService,//inject the kyc service so you can call its methods
     private snackBar: MatSnackBar
   ) {
 
@@ -228,13 +228,13 @@ personal_details = signal({
 
   onNext() {
     if (this.personalInfoForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
+      this.isSubmitting = true;//checks if the form has all required fields correct and a submission is not in progress
       const formData = this.personalInfoForm.getRawValue();
       
-      // Format phone number - get the international format
+      // Format phone number - get the international format,returns an object
       const phoneNumber = formData.phoneNumber?.e164Number || formData.phoneNumber?.number;
       
-      // Create the payload object with all required fields
+      // Create the payload object  to send to the backend with all required fields
       const payload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -252,11 +252,11 @@ personal_details = signal({
       console.log('Form data before submission:', formData); // Debug log
       console.log('Payload being sent:', payload); // Debug log
 
-      // Submit to the backend
+      // The payload is passed th the submitPersonalDetails() method of the kyc service
       this.kycService.submitPersonalDetails(payload).subscribe({
         next: (response) => {
           console.log('Response from server:', response);
-          // Store the customer ID and data in localStorage
+          // if server replies successfully it stores the customerid and saves it in local storage
           const storedData = {
             ...payload,
             customerId: response.id || response.customerId

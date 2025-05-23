@@ -1,4 +1,4 @@
-< class="kyc-container">
+<div class="kyc-container">
   <mat-card class="kyc-card">
     <div class="header-content">
       <div class="header-left">
@@ -29,7 +29,7 @@
 
      
      <app-step-progress [currentStep]="1"></app-step-progress> 
-
+<!-- formgroup allows to manage multiple form controls together validating form data as a group-->
     <form [formGroup]="personalInfoForm" class="form-section" (ngSubmit)="onNext()">
   <div class="form-row">
     <mat-form-field appearance="outline">
